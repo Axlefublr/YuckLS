@@ -7,11 +7,11 @@ internal sealed class YuckCompleter(string _text, ILogger<CompletionHandler> _lo
     public CompletionList GetCompletions()
     {
         var completeTrigger = _sExpression.TryGetCompletionTrigger();
+        if (completeTrigger == YuckCompleterTypes.None) return new CompletionList();
         var items = new List<CompletionItem>();
-        _logger.LogError($"Completion trigger was {completeTrigger}");
         if (completeTrigger == Models.YuckCompleterTypes.TopLevel)
         {
-            foreach (var yuckType in YuckTypesProvider.YuckTopLevelTypes)
+            foreach (var yuckType in YuckTypesProvider.YuckTypes.Where(p => p.IsTopLevel == true))
             {
                 items.Add(new()
                 {
@@ -21,11 +21,25 @@ internal sealed class YuckCompleter(string _text, ILogger<CompletionHandler> _lo
                     InsertText = yuckType.name
                 });
             }
-            return new CompletionList(items);
+        }
+        else if (completeTrigger == Models.YuckCompleterTypes.Widget)
+        {
+            _logger.LogError("Trying to suggest widgets");
+            foreach (var yuckType in YuckTypesProvider.YuckTypes.Where(p => p.IsGtkWidgetType == true))
+            {
+                items.Add(new()
+                {
+                    Label = yuckType.name,
+                    Documentation = new StringOrMarkupContent(yuckType.description),
+                    Kind = CompletionItemKind.Class,
+                    InsertText = yuckType.name
+                });
+            }
         }
         else
         {
             return new CompletionList();
         }
+        return new CompletionList(items);
     }
 }
