@@ -1,27 +1,27 @@
 namespace YuckLS.Core;
 using YuckLS.Handlers;
+using YuckLS.Core.Models;
 internal sealed class YuckCompleter(string _text, ILogger<CompletionHandler> _logger)
 {
+    private readonly SExpression _sExpression = new(_text);
     public CompletionList GetCompletions()
     {
-        var completeTrigger = SExpression.TryGetCompletionTrigger(_text);
+        var completeTrigger = _sExpression.TryGetCompletionTrigger();
+        var items = new List<CompletionItem>();
         _logger.LogError($"Completion trigger was {completeTrigger}");
-        if (completeTrigger == "(")
+        if (completeTrigger == Models.YuckCompleterTypes.TopLevel)
         {
-            return new CompletionList(new[] {
-                    new CompletionItem{
-                     Label = "defwindow",
-                     Documentation = new StringOrMarkupContent("Create a window"),
-                     Kind = CompletionItemKind.Class,
-                     InsertText = "defwindow"
-                    },
-                    new CompletionItem{
-                     Label = "defwidget",
-                     Documentation = new StringOrMarkupContent("Create a widget"),
-                     Kind = CompletionItemKind.Class,
-                     InsertText = "defwidget"
-                    }
-            });
+            foreach (var yuckType in YuckTypesProvider.YuckTopLevelTypes)
+            {
+                items.Add(new()
+                {
+                    Label = yuckType.name,
+                    Documentation = new StringOrMarkupContent(yuckType.description),
+                    Kind = CompletionItemKind.Class,
+                    InsertText = yuckType.name
+                });
+            }
+            return new CompletionList(items);
         }
         else
         {
@@ -29,4 +29,3 @@ internal sealed class YuckCompleter(string _text, ILogger<CompletionHandler> _lo
         }
     }
 }
-
