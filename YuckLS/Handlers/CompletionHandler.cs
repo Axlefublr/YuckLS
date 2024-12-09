@@ -1,23 +1,52 @@
 namespace YuckLS.Handlers;
 using System.Threading;
 using System.Threading.Tasks;
-internal sealed class CompletionHandler : CompletionHandlerBase
+
+using YuckLS.Core;
+using YuckLS.Services;
+
+internal sealed class CompletionHandler(
+        ILogger<CompletionHandler> _logger,
+        TextDocumentSelector _textDocumentSelector,
+        IBufferService _bufferService
+        ) : CompletionHandlerBase
 {
-   public override Task<CompletionItem> Handle(CompletionItem request, CancellationToken cancellationToken)
+    private readonly string[] _triggerChars = { "(", ":" };
+    public override Task<CompletionItem> Handle(CompletionItem request, CancellationToken cancellationToken)
     {
-        return default;
-        throw new NotImplementedException();
+        var ci = new CompletionItem
+        {
+            Label = request.Label,
+            Kind = request.Kind,
+            InsertText = request.InsertText,
+            //Command = Command.Create("avalonia.InsertProperty", new { repositionCaret = RepositionCaret() })
+        };
+        return Task.FromResult(ci);
     }
 
-    public override Task<CompletionList> Handle(CompletionParams request, CancellationToken cancellationToken)
+    public override async Task<CompletionList> Handle(CompletionParams request, CancellationToken cancellationToken)
     {
-        return default;
-        throw new NotImplementedException();
+        string text = _bufferService.GetTextTillPosition(request.TextDocument.Uri, request.Position);
+        if(text is null)
+            return new CompletionList();
+
+        YuckCompleter yuckCompleter = new YuckCompleter(text,_logger);
+        var completions = yuckCompleter.GetCompletions();
+        if (completions is null || completions.Count() == 0)
+            return new CompletionList();
+        _logger.LogError($"SIZE OF COMPLETIONS IS {completions.Count()}");
+        return completions; 
     }
 
     protected override CompletionRegistrationOptions CreateRegistrationOptions(CompletionCapability capability, ClientCapabilities clientCapabilities)
     {
-        return default;
-       // throw new NotImplementedException();
+        return new()
+        {
+            DocumentSelector = _textDocumentSelector,
+            TriggerCharacters = new Container<string>(_triggerChars),
+            AllCommitCharacters = new Container<string>("\n"),
+            ResolveProvider = true
+        };
+        // throw new NotImplementedException();
     }
-}  
+}

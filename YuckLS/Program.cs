@@ -11,6 +11,7 @@ global using MediatR;
 global using System.Linq;
 global using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
 using YuckLS.Handlers;
+using YuckLS.Services;
 namespace YuckLS;
 internal class Program
 {
@@ -31,6 +32,8 @@ internal class Program
                     .WithServices(s =>
                         s.AddSingleton(new ConfigurationItem { Section = "Yuck Server" })
                         .AddSingleton(GetServer)
+                        .AddSingleton(new TextDocumentSelector(new TextDocumentFilter { Pattern = "**/*.yuck"}))
+                        .AddSingleton<IBufferService,BufferService>()
                         )
                     );
         await server.WaitForExit;
@@ -42,8 +45,9 @@ internal class Program
         Log.Logger = new LoggerConfiguration()
             .WriteTo.File(logfile)
             .Enrich.FromLogContext()
-            .MinimumLevel.Verbose()
+            .MinimumLevel.Error()
             .CreateLogger();
     }
-    static ILanguageServer GetServer() => server;
+    private static ILanguageServer GetServer() => server;
+    
 }

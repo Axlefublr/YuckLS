@@ -1,14 +1,15 @@
+using YuckLS.Services;
+
 namespace YuckLS.Handlers;
 
-internal sealed class TextDocumentSyncHandler(ILogger<TextDocumentSyncHandler> _logger) : TextDocumentSyncHandlerBase
+internal sealed class TextDocumentSyncHandler(
+        ILogger<TextDocumentSyncHandler> _logger,
+        ILanguageServerConfiguration _configuration,
+        IBufferService _bufferService,
+        TextDocumentSelector _textDocumentSelector
+        ) : TextDocumentSyncHandlerBase
 {
-    private readonly TextDocumentSelector _textDocumentSelector = new TextDocumentSelector(
-            new TextDocumentFilter
-            {
-                Pattern = "**/*.yuck"
-            }
-        );
-    public override TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri)
+        public override TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri)
     {
         return new TextDocumentAttributes(uri, uri.Scheme!, "yuck");
     }
@@ -16,6 +17,8 @@ internal sealed class TextDocumentSyncHandler(ILogger<TextDocumentSyncHandler> _
     public override async Task<Unit> Handle(DidOpenTextDocumentParams request, CancellationToken cancellationToken)
     {
         _logger.LogTrace("FIle was opened");
+        var conf = await _configuration.GetScopedConfiguration(request.TextDocument.Uri, cancellationToken);
+        _bufferService.Add(request.TextDocument.Uri, request.TextDocument.Text);
         return Unit.Value;
     }
 
@@ -23,6 +26,17 @@ internal sealed class TextDocumentSyncHandler(ILogger<TextDocumentSyncHandler> _
     {
         //document changed 
         _logger.LogTrace($"You've changed this yuck document at {request.ContentChanges.First()}");
+        //log content after change
+        foreach (var change in request.ContentChanges)
+        {
+            if (change.Range != null)
+            {
+                _bufferService.ApplyIncrementalChange(request.TextDocument.Uri,change.Range,change.Text);
+            }
+            else{
+                _bufferService.ApplyFullChange(request.TextDocument.Uri,change.Text);
+            }
+        }
         return Task.FromResult(Unit.Value);
     }
 
@@ -44,7 +58,6 @@ internal sealed class TextDocumentSyncHandler(ILogger<TextDocumentSyncHandler> _
             DocumentSelector = _textDocumentSelector,
             Change = OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities.TextDocumentSyncKind.Incremental,
             Save = new SaveOptions() { IncludeText = false }
-
         };
     }
 }
