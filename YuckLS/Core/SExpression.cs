@@ -2,9 +2,14 @@ using System.Text.RegularExpressions;
 
 using YuckLS.Core.Models;
 namespace YuckLS.Core;
-public class SExpression(string _text)
+public class SExpression
 {
-
+    private readonly string _text;
+    private readonly string _refinedText;
+    public SExpression(string _text)
+    {
+        this._text = _text;
+    }
     private const char _openTag = '(';
     private const char _OpenProperties = ':';
     ///<summary>
@@ -64,15 +69,17 @@ public class SExpression(string _text)
 
     ///<summary>
     ///Gets the parent node for the cursor's position. E.g (box , the parent node is box
+    ///</summary>
     public string GetParentNode()
     {
         //pop last char from Text
         var text = _text[..^1];
-        var matches = Regex.Matches(text, @"\(\s*(\w+)");
-
+        var matches = Regex.Matches(text, @"\(\w+[^\(\)\r\n]*\s*(?!.*\))", RegexOptions.IgnoreCase); 
         if (matches.Count > 0)
         {
-            return matches[matches.Count - 1].Groups[1].Value;
+            //trim line breaks and remove properties from node
+            var value = matches.Last().Value.Trim().Split()[0];
+            if(value[0] == '(') return value.Substring(1);
         }
         return null;
     }
