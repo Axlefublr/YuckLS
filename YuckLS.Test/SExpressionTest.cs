@@ -1,10 +1,11 @@
 namespace YuckLS.Test;
 using YuckLS.Core;
-public class SExpressionTest{
-   
-    /**Test cases for isTopLevel
+public class SExpressionTest
+{
+
+    /**Test cases for isTopLevel()
      * All testcases must end with '(' Because that's the only thing that will trigger this method
-     * */ 
+     * */
     private string[] _isTopLevelTestCases = new string[] {
         //1
         @"(defwindow 
@@ -34,20 +35,134 @@ public class SExpressionTest{
             )
             ()
             (name :ping)
-            ("
+            (",
+
+        //6
+        @"(defwidget media 
+            ;(defpoll (defwidget))
+            )
+            ;(defpoll)
+            (
+        ",
+        //7
+        @"(defwidget media
+           ; )
+
+          (  "
+    };
+
+    /*Test cases fot GetParentNode()
+     *All test cases must end with '(' and must not be top level. That is isTopLevel() must return false for it.
+     */
+    private string[] _getParentNodeTestCases = new string[]{
+        //1 
+        @"(defwindow 
+            (box 
+                (",
+
+        //2
+        @"(defpoll 
+            (defwidget 
+                (deflisten
+                    (defvar
+                        (                 
+             
+        ",
+        //3
+        @"(defpoll
+           (defwindow
+            ))
+        ()()
+        (defwindow
+         (box
+            (label :name Label-name)
+            )
+        )
+        (defwindow 
+            (defwidget 
+            ( 
+           ",
+
+        //4 
+        @"(defpoll 
+            (defwindow
+                (label xx
+                    (box )
+                    (box )
+                    (table )
+                    (
+                 
+             
+        ",
+
+        //5 
+        @"(defpoll
+            ;(defwidget 
+            (     
+        )",
+        //6
+            @"
+(defwindow
+  (box :orientation horizontal
+       :halign center
+    text
+    (button :onclick notify-send 'Hello' 'Hello, ${name}'
+      Greet))
+    (
+    
+",
+//7 
+@"
+ (box :orientation v :spacing -200  :class media-box :visible isSpotify
+    (box  :height 300px :style background-image:url('${mediaart}') :class mediaart)
+    ; (label :text cava :class mediaartist
+    (label :text mediatitle :class mediatitle :truncate true
+        :placeholder hh
+     )
+    (label :text mediaartist :class mediaartist
+     :gddgdg
+     (box )
+    )
+   ( 
+  "
+
     };
     [Fact]
-    public void IsTopLevelTest(){
+    public void IsTopLevelTest()
+    {
         var instance1 = new SExpression(_isTopLevelTestCases[0]).IsTopLevel();
         var instance2 = new SExpression(_isTopLevelTestCases[1]).IsTopLevel();
         var instance3 = new SExpression(_isTopLevelTestCases[2]).IsTopLevel();
         var instance4 = new SExpression(_isTopLevelTestCases[3]).IsTopLevel();
         var instance5 = new SExpression(_isTopLevelTestCases[4]).IsTopLevel();
-
+        var instance6 = new SExpression(_isTopLevelTestCases[5]).IsTopLevel();
+        var instance7 = new SExpression(_isTopLevelTestCases[6]).IsTopLevel();
         Assert.False(instance1);
         Assert.True(instance2);
         Assert.False(instance3);
         Assert.False(instance4);
         Assert.True(instance5);
+        Assert.True(instance6);
+        Assert.False(instance7);
     }
+
+    [Fact]
+    public void GetParentNodeTest()
+    {
+        //\(\w+[^\(]*\)
+        var instance1 = new SExpression(_getParentNodeTestCases[0]).GetParentNode();
+        var instance2 = new SExpression(_getParentNodeTestCases[1]).GetParentNode();
+        var instance3 = new SExpression(_getParentNodeTestCases[2]).GetParentNode();
+        var instance4 = new SExpression(_getParentNodeTestCases[3]).GetParentNode();
+        var instance5 = new SExpression(_getParentNodeTestCases[4]).GetParentNode();
+        var instance6 = new SExpression(_getParentNodeTestCases[5]).GetParentNode();
+        var instance7 = new SExpression(_getParentNodeTestCases[6]).GetParentNode();
+        Assert.Equal(instance1, "box");
+        Assert.Equal(instance2, "defvar");
+        Assert.Equal(instance3, "defwidget");
+        Assert.Equal(instance4,"label");
+        Assert.Equal(instance5, "defpoll");
+        Assert.Equal(instance6, "defwindow");
+        Assert.Equal(instance7,"box");
+    } 
 }
