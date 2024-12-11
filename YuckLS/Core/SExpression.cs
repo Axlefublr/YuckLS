@@ -70,8 +70,8 @@ public class SExpression
             if (parentNode == null) return default;
 
             //try to parse the parentNode to a yuck type. Will deal with custom types later
-            YuckType parentType = YuckTypesProvider.YuckTypes.Where(type => type.name == parentNode).First();
-            if(parentType == null) return default;
+            YuckType parentType = YuckTypesProvider.YuckTypes?.Where(type => type.name == parentNode)?.First();
+            if (parentType == null) return default;
 
             return new PropertyYuckCompletionContext() { parentType = parentType };
         }
@@ -103,8 +103,19 @@ public class SExpression
     ///</summary>
     public string GetParentNode()
     {
-        //pop last char from Text
-        var matches = Regex.Matches(_refinedText, @"\(\w+[^\(\)\r\n]*\s*(?!.*\))", RegexOptions.IgnoreCase);
+        //i could not figure out how to do this in one command
+        //recursively delete any tags that are closed even on multilines
+        int matchCount = 0;
+        string _cleanedText = _refinedText;
+        string patternForClosedNodes = @"\(\w+[^\(]*?\)";
+        do
+        {
+            matchCount = Regex.Matches(_cleanedText, patternForClosedNodes, RegexOptions.IgnoreCase).Count;
+            _cleanedText = Regex.Replace(_cleanedText, patternForClosedNodes, "", RegexOptions.IgnoreCase);
+
+        } while (matchCount > 0);
+
+        var matches = Regex.Matches(_cleanedText, @"\(\w+", RegexOptions.IgnoreCase);
         if (matches.Count > 0)
         {
             //trim line breaks and remove properties from node
