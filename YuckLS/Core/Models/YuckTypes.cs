@@ -447,6 +447,7 @@ public static class YuckTypesProvider
       name = "button",
         description = "A button containing any widget as its child. Events are triggered on release.",
         IsGtkWidgetType = true,
+        AreWidgetsEmbeddable = true,
         properties = new YuckProperty[]{
             new(){
                 name = "onclick",

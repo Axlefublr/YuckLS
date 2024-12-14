@@ -5,7 +5,7 @@ public class SExpressionTest
 
     /**Test cases for isTopLevel()
      * All testcases must end with '(' Because that's the only thing that will trigger this method
-     * */
+     * */ 
     private string[] _isTopLevelTestCases = new string[] {
         //1
         @"(defwindow 
@@ -48,7 +48,14 @@ public class SExpressionTest
         @"(defwidget media
            ; )
 
-          (  "
+          (  ",
+
+        //8
+        @"(defwidget
+            )
+        (defpoll 'curl ; ()fsfsfsfsf')
+        (
+        "
     };
 
     /*Test cases fot GetParentNode()
@@ -130,13 +137,15 @@ public class SExpressionTest
     [Fact]
     public void IsTopLevelTest()
     {
-        var instance1 = new SExpression(_isTopLevelTestCases[0]).IsTopLevel();
-        var instance2 = new SExpression(_isTopLevelTestCases[1]).IsTopLevel();
-        var instance3 = new SExpression(_isTopLevelTestCases[2]).IsTopLevel();
-        var instance4 = new SExpression(_isTopLevelTestCases[3]).IsTopLevel();
-        var instance5 = new SExpression(_isTopLevelTestCases[4]).IsTopLevel();
-        var instance6 = new SExpression(_isTopLevelTestCases[5]).IsTopLevel();
-        var instance7 = new SExpression(_isTopLevelTestCases[6]).IsTopLevel();
+       var CompletionHandlerLoggerMock = new Mock<Microsoft.Extensions.Logging.ILogger<YuckLS.Handlers.CompletionHandler>>();
+        var instance1 = new SExpression(_isTopLevelTestCases[0],CompletionHandlerLoggerMock.Object).IsTopLevel();
+        var instance2 = new SExpression(_isTopLevelTestCases[1],CompletionHandlerLoggerMock.Object).IsTopLevel();
+        var instance3 = new SExpression(_isTopLevelTestCases[2],CompletionHandlerLoggerMock.Object).IsTopLevel();
+        var instance4 = new SExpression(_isTopLevelTestCases[3],CompletionHandlerLoggerMock.Object).IsTopLevel();
+        var instance5 = new SExpression(_isTopLevelTestCases[4],CompletionHandlerLoggerMock.Object).IsTopLevel();
+        var instance6 = new SExpression(_isTopLevelTestCases[5],CompletionHandlerLoggerMock.Object).IsTopLevel();
+        var instance7 = new SExpression(_isTopLevelTestCases[6],CompletionHandlerLoggerMock.Object).IsTopLevel();
+        var instance8 = new SExpression(_isTopLevelTestCases[7],CompletionHandlerLoggerMock.Object).IsTopLevel();
         Assert.False(instance1);
         Assert.True(instance2);
         Assert.False(instance3);
@@ -144,19 +153,21 @@ public class SExpressionTest
         Assert.True(instance5);
         Assert.True(instance6);
         Assert.False(instance7);
+       Assert.True(instance8);
     }
 
     [Fact]
     public void GetParentNodeTest()
     {
         //\(\w+[^\(]*\)
-        var instance1 = new SExpression(_getParentNodeTestCases[0]).GetParentNode();
-        var instance2 = new SExpression(_getParentNodeTestCases[1]).GetParentNode();
-        var instance3 = new SExpression(_getParentNodeTestCases[2]).GetParentNode();
-        var instance4 = new SExpression(_getParentNodeTestCases[3]).GetParentNode();
-        var instance5 = new SExpression(_getParentNodeTestCases[4]).GetParentNode();
-        var instance6 = new SExpression(_getParentNodeTestCases[5]).GetParentNode();
-        var instance7 = new SExpression(_getParentNodeTestCases[6]).GetParentNode();
+     var CompletionHandlerLoggerMock = new Mock<Microsoft.Extensions.Logging.ILogger<YuckLS.Handlers.CompletionHandler>>();
+        var instance1 = new SExpression(_getParentNodeTestCases[0],CompletionHandlerLoggerMock.Object).GetParentNode();
+        var instance2 = new SExpression(_getParentNodeTestCases[1],CompletionHandlerLoggerMock.Object).GetParentNode();
+        var instance3 = new SExpression(_getParentNodeTestCases[2],CompletionHandlerLoggerMock.Object).GetParentNode();
+        var instance4 = new SExpression(_getParentNodeTestCases[3],CompletionHandlerLoggerMock.Object).GetParentNode();
+        var instance5 = new SExpression(_getParentNodeTestCases[4],CompletionHandlerLoggerMock.Object).GetParentNode();
+        var instance6 = new SExpression(_getParentNodeTestCases[5],CompletionHandlerLoggerMock.Object).GetParentNode();
+        var instance7 = new SExpression(_getParentNodeTestCases[6],CompletionHandlerLoggerMock.Object).GetParentNode();
         Assert.Equal(instance1, "box");
         Assert.Equal(instance2, "defvar");
         Assert.Equal(instance3, "defwidget");

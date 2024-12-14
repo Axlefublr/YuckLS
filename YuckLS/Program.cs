@@ -13,7 +13,7 @@ global using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
 using YuckLS.Handlers;
 using YuckLS.Services;
 namespace YuckLS;
-internal class Program
+public class Program
 {
     static ILanguageServer server;
     public async static Task Main(string[] args)

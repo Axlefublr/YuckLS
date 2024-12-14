@@ -1,17 +1,33 @@
 using System.Text.RegularExpressions;
-
 using YuckLS.Core.Models;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("YuckLS.Test")]
 namespace YuckLS.Core;
-public class SExpression
+internal class SExpression
 {
     private readonly string _text;
-    private readonly string _refinedText;
-    public SExpression(string _text)
+    private readonly string _completionText;
+    private readonly ILogger<YuckLS.Handlers.CompletionHandler> _logger;
+
+
+    public SExpression(string _text, ILogger<YuckLS.Handlers.CompletionHandler> _logger)
     {
         this._text = _text.Trim();
+        this._logger = _logger;
+        _completionText = this._text;
+        //recursively delete char in quotes to prevent interferance
+        int quotesMatchCount = 0;
+        string quotesMatchPattern = "['\"`][^'\"`]*['\"`]";
+        do
+        {
+            var quotesMatches = Regex.Matches(_completionText, quotesMatchPattern).Count();
+            _completionText = Regex.Replace(_completionText, quotesMatchPattern, "");
+        }
+        while (quotesMatchCount > 0);
 
-        //delete comments from text to prevent interferance
-        string[] lines = this._text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+        //delete comments from text to prevent interferance, this must be dont after characters in quotes have been removed or completer might break 
+        string[] lines = this._completionText.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
         for (int i = 0; i < lines.Length; i++)
         {
             int semicolonIndex = lines[i].IndexOf(';');
@@ -20,10 +36,11 @@ public class SExpression
                 lines[i] = lines[i].Substring(0, semicolonIndex);
             }
         }
-
         //pop last char from text
-        _refinedText = string.Join(Environment.NewLine, lines)[..^1];
+        _completionText = string.Join(Environment.NewLine, lines)[..^1];
     }
+
+
     private const char _openTag = '(';
     private const char _OpenProperties = ':';
     ///<summary>
@@ -85,36 +102,38 @@ public class SExpression
     ///Determine is the cursor position can declare a top level widget
     ///</summary>
 
-    //this should not be public, i dont know how to test with it private without using reflection or hacking things together
-    public bool IsTopLevel()
+    internal protected bool IsTopLevel()
     {
         int depth = 0;
-        foreach (char c in _refinedText)
+        foreach (char c in _completionText)
         {
-            if (c == '(') depth++;
-            if (c == ')') depth--;
-
+            if (c == '(')
+            {
+                depth++;
+            }
+            if (c == ')')
+            {
+                depth--;
+            }
         }
-        return depth == 0 ? true : false;
+        return depth == 0;
     }
 
     ///<summary>
     ///Gets the parent node for the cursor's position. E.g (box , the parent node is box
     ///</summary>
-    public string GetParentNode()
+    internal protected string GetParentNode()
     {
         //i could not figure out how to do this in one command
         //recursively delete any tags that are closed even on multilines
         int matchCount = 0;
-        string _cleanedText = _refinedText;
+        string _cleanedText = _completionText;
         string patternForClosedNodes = @"\(\w+[^\(]*?\)";
         do
         {
             matchCount = Regex.Matches(_cleanedText, patternForClosedNodes, RegexOptions.IgnoreCase).Count;
             _cleanedText = Regex.Replace(_cleanedText, patternForClosedNodes, "", RegexOptions.IgnoreCase);
-
         } while (matchCount > 0);
-
         var matches = Regex.Matches(_cleanedText, @"\(\w+", RegexOptions.IgnoreCase);
         if (matches.Count > 0)
         {
