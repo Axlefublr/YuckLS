@@ -945,6 +945,59 @@ public static class YuckTypesProvider
             }
         }
     },
+
+    //special types 
+    new(){
+        name = "geometry",
+        description = "Size and positional description for a the window geometry property",
+        //not ideal, will fix this later
+        IsGtkWidgetType = true,
+        properties = new YuckProperty[]{
+            new(){
+                name = "x",
+                description = "The x-axis position",
+                dataType = YuckDataType.YuckString
+            },
+              new(){
+                name = "y",
+                description = "The y-axis position",
+                dataType = YuckDataType.YuckString
+            },
+            new(){
+                name = "width",
+                description = "The width of the window",
+                dataType = YuckDataType.YuckString
+            },
+            new(){
+                name = "height",
+                description = "The height of the window",
+                dataType = YuckDataType.YuckString
+            },
+            new(){
+                name = "anchor",
+                description = "The positional anchor of the window e.g top left, top center, bottom right, e.t.c",
+                dataType = YuckDataType.YuckString
+            }
+        }
+    },
+    new() {
+        name = "struts",
+        description = "Reserve struts for X11",
+        //not ideal, will fix this later,
+        IsGtkWidgetType = true,
+        properties = new YuckProperty[] {
+            new(){
+                name = "distance",
+                description = "The distance",
+                dataType = YuckDataType.YuckString
+            },
+            new(){
+                name = "side",
+                description = "The side allowance",
+                dataType = YuckDataType.YuckString
+            }
+        }
+    }
   };
 
 }

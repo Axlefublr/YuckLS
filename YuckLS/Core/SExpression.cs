@@ -54,10 +54,7 @@ internal class SExpression
         if (_text.Last() == _openTag)
         {
             //if user's cursor is about to create a top level tag 
-            if (IsTopLevel())
-            {
-                return new TopLevelYuckCompletionContext();
-            }
+            if (IsTopLevel()) return new TopLevelYuckCompletionContext();
             //a parent node must exist if the cursor is not top level
             string parentNode = GetParentNode();
             //lookup the parentNode in yuck types
@@ -70,15 +67,9 @@ internal class SExpression
                 }
             }
             //if parentType is still null, then parentNode is none standard. Perhaps custom widget?
-            if (parentType == null)
-            {
-                return default;
-            }
+            if (parentType == null) return default;
             //check if parentType supports GTK widget nodes
-            if (parentType.AreWidgetsEmbeddable)
-            {
-                return new WidgetYuckCompletionContext();
-            }
+            if (parentType.AreWidgetsEmbeddable) return new WidgetYuckCompletionContext();
         }
         else if (_text.Last() == _OpenProperties)
         {

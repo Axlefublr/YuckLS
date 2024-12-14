@@ -41,11 +41,11 @@ public class Program
     private static void InitLogging()
     {
         //temporary log location
-        string logfile = Path.Combine("/home/noble/Documents/YuckLS/YuckLS/", "yucklsp.log");
+        string logfile = Path.Combine(Path.GetTempPath(), "yucklsp.log");
         Log.Logger = new LoggerConfiguration()
             .WriteTo.File(logfile)
             .Enrich.FromLogContext()
-            .MinimumLevel.Error()
+            .MinimumLevel.Verbose()
             .CreateLogger();
     }
     private static ILanguageServer GetServer() => server;
