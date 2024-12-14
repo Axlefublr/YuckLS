@@ -1,46 +1,41 @@
 namespace YuckLS.Core.Models;
 
 //really wish i had rust enums right about now
-public abstract class YuckCompletionContext { }
-public class TopLevelYuckCompletionContext : YuckCompletionContext { }
-public class WidgetYuckCompletionContext : YuckCompletionContext { }
-public class PropertyYuckCompletionContext : YuckCompletionContext
-{
-    public YuckType parentType;
+public abstract class YuckCompletionContext {}
+public class TopLevelYuckCompletionContext: YuckCompletionContext {}
+public class WidgetYuckCompletionContext: YuckCompletionContext {}
+public class PropertyYuckCompletionContext: YuckCompletionContext {
+  public YuckType parentType;
 }
 
-public class YuckType
-{
-    public string name;
-    public YuckProperty[] properties;
-    public string description;
-    public bool IsTopLevel = false;
-    public bool AreWidgetsEmbeddable = false;
-    public bool IsGtkWidgetType = false;
+public class YuckType {
+  public string name;
+  public YuckProperty[] properties;
+  public string description;
+  public bool IsTopLevel = false;
+  public bool AreWidgetsEmbeddable = false;
+  public bool IsGtkWidgetType = false;
 }
-public class YuckProperty
-{
-    public string name;
-    public string description;
-    public YuckDataType? dataType;
-    public string[]? possibleValues;
+public class YuckProperty {
+  public string name;
+  public string description;
+  public YuckDataType ? dataType;
+  public string[] ? possibleValues;
 }
 
-public enum YuckDataType
-{
-    YuckString,
-    YuckInt,
-    YuckBool,
-    YuckDuration,
-    YuckFloat,
-    Custom
+public enum YuckDataType {
+  YuckString,
+  YuckInt,
+  YuckBool,
+  YuckDuration,
+  YuckFloat,
+  Custom
 };
 /*
  * I should not hard-code these. I just don't know a better way to do it.
  */
-public static class YuckTypesProvider
-{
-    private static readonly YuckProperty[] _commonGtkWidgetProperties = new YuckProperty[] {
+public static class YuckTypesProvider {
+  private static readonly YuckProperty[] _commonGtkWidgetProperties = new YuckProperty[] {
     new() {
       name = "class",
         description = "css class name",
@@ -102,7 +97,7 @@ public static class YuckTypesProvider
         dataType = YuckDataType.YuckString
     }
   };
-    private static YuckProperty[] _timeOutProperty = new YuckProperty[] {
+  private static YuckProperty[] _timeOutProperty = new YuckProperty[] {
     new() {
       name = "timeout",
         description = "timeout of the command: Default: '200ms'",
@@ -110,7 +105,7 @@ public static class YuckTypesProvider
     },
 
   };
-    public static readonly YuckType[] YuckTypes = new YuckType[] {
+  public static readonly YuckType[] YuckTypes = new YuckType[] {
     /* Top Level */
     new() {
       name = "defwidget",
@@ -320,8 +315,8 @@ public static class YuckTypesProvider
           },
           new() {
             name = "onchange",
-            description = " runs the code when the color was selected",
-            dataType = YuckDataType.YuckString
+              description = " runs the code when the color was selected",
+              dataType = YuckDataType.YuckString
           },
         }.Concat(_commonGtkWidgetProperties).Concat(_timeOutProperty).ToArray()
     },
@@ -329,7 +324,7 @@ public static class YuckTypesProvider
       name = "color-chooser",
         description = "A color chooser widget.",
         IsGtkWidgetType = true,
-  properties = new YuckProperty[] {
+        properties = new YuckProperty[] {
           new() {
             name = "use-alpha",
               description = "bool to whether or not use alpha",
@@ -337,8 +332,8 @@ public static class YuckTypesProvider
           },
           new() {
             name = "onchange",
-            description = " runs the code when the color was selected",
-            dataType = YuckDataType.YuckString
+              description = " runs the code when the color was selected",
+              dataType = YuckDataType.YuckString
           },
         }.Concat(_commonGtkWidgetProperties).Concat(_timeOutProperty).ToArray()
     },
@@ -347,73 +342,73 @@ public static class YuckTypesProvider
         description = "A slider widget.",
         IsGtkWidgetType = true,
         properties = new YuckProperty[] {
-            new(){
-                name = "flipped",
-                description = "flip the direction",
-                dataType = YuckDataType.YuckBool
-            },
-            new(){
-                name = "marks",
-                description = "draw marks",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "draw-value",
-                description = "draw the value of the property",
-                dataType = YuckDataType.YuckBool,
-            },
-            new(){
-                name = "round-digits",
-                description = "Sets the number of decimals to round the value to when it changes",
-                dataType = YuckDataType.YuckInt
-            },
-            new(){
-                name = "value",
-                description = "the value",
-                dataType = YuckDataType.YuckFloat
-            },
-            new(){
-                name = "min",
-                description = "the minimum value",
-                dataType = YuckDataType.YuckFloat
-            },
-            new(){
-                name = "max",
-                description = "the maximum value",
-                dataType = YuckDataType.YuckFloat
-            },
-            new(){
-                name = "onchange",
-                description = "command executed once the value is changes. The placeholder {}, used in the command will be replaced by the new value.",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "orientation",
-                description = "orientation of the widget. Possible values: 'vertical', 'v', 'horizontal', 'h'",
-                dataType = YuckDataType.YuckString
-            }
+          new() {
+            name = "flipped",
+              description = "flip the direction",
+              dataType = YuckDataType.YuckBool
+          },
+          new() {
+            name = "marks",
+              description = "draw marks",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "draw-value",
+              description = "draw the value of the property",
+              dataType = YuckDataType.YuckBool,
+          },
+          new() {
+            name = "round-digits",
+              description = "Sets the number of decimals to round the value to when it changes",
+              dataType = YuckDataType.YuckInt
+          },
+          new() {
+            name = "value",
+              description = "the value",
+              dataType = YuckDataType.YuckFloat
+          },
+          new() {
+            name = "min",
+              description = "the minimum value",
+              dataType = YuckDataType.YuckFloat
+          },
+          new() {
+            name = "max",
+              description = "the maximum value",
+              dataType = YuckDataType.YuckFloat
+          },
+          new() {
+            name = "onchange",
+              description = "command executed once the value is changes. The placeholder {}, used in the command will be replaced by the new value.",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "orientation",
+              description = "orientation of the widget. Possible values: 'vertical', 'v', 'horizontal', 'h'",
+              dataType = YuckDataType.YuckString
+          }
         }.Concat(_commonGtkWidgetProperties).Concat(_timeOutProperty).ToArray()
     },
     new() {
-      name = "progress HINT: for the width property to work, you may need to set the min-width of progressbar > trough in your css.",
+      name = "progress",
         description = "A progress bar.",
         IsGtkWidgetType = true,
-        properties = new YuckProperty[]{
-            new(){
-                name = "flipped",
-                description = "flip the direction",
-                dataType = YuckDataType.YuckBool
-            },
-            new(){
-                name = "value",
-                description = "value of the progress bar (between 0-100)",
-                dataType = YuckDataType.YuckFloat
-            },
-            new(){
-                name = "orientation",
-                description = "orientation of the widget. Possible values: 'vertical', 'v', 'horizontal', 'h'",
-                dataType = YuckDataType.YuckString
-            },
+        properties = new YuckProperty[] {
+          new() {
+            name = "flipped",
+              description = "flip the direction",
+              dataType = YuckDataType.YuckBool
+          },
+          new() {
+            name = "value",
+              description = "value of the progress bar (between 0-100)",
+              dataType = YuckDataType.YuckFloat
+          },
+          new() {
+            name = "orientation",
+              description = "orientation of the widget. Possible values: 'vertical', 'v', 'horizontal', 'h'",
+              dataType = YuckDataType.YuckString
+          },
         }.Concat(_commonGtkWidgetProperties).ToArray()
     },
     new() {
@@ -421,26 +416,26 @@ public static class YuckTypesProvider
         description = "An input field. For this to be usable, set focusable = true on the window.",
         IsGtkWidgetType = true,
         properties = new YuckProperty[] {
-            new(){
-                name = "value",
-                description = "the content of the text field",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "onchange",
-                description = "Command to run when the text changes. The placeholder {} will be replaced by the value",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "onaccept",
-                description = " Command to run when the user hits return in the input field. The placeholder {} will be replaced by the value",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "password",
-                description = " if the input is obscured",
-                dataType = YuckDataType.YuckBool
-            },
+          new() {
+            name = "value",
+              description = "the content of the text field",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "onchange",
+              description = "Command to run when the text changes. The placeholder {} will be replaced by the value",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "onaccept",
+              description = " Command to run when the user hits return in the input field. The placeholder {} will be replaced by the value",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "password",
+              description = " if the input is obscured",
+              dataType = YuckDataType.YuckBool
+          },
         }.Concat(_commonGtkWidgetProperties).Concat(_timeOutProperty).ToArray()
     },
     new() {
@@ -448,64 +443,64 @@ public static class YuckTypesProvider
         description = "A button containing any widget as its child. Events are triggered on release.",
         IsGtkWidgetType = true,
         AreWidgetsEmbeddable = true,
-        properties = new YuckProperty[]{
-            new(){
-                name = "onclick",
-                description = " command to run when the button is activated either by leftclicking or keyboard",
-                dataType = YuckDataType.YuckString,
-            },
-            new(){
-                name = "onmiddleclick",
-                description = "command to run when the button is middleclicked",
-                dataType = YuckDataType.YuckBool,
-            },
-            new(){
-                name = "onrightclick",
-                description = "command to run when the button is rightclicked",
-                dataType  = YuckDataType.YuckString
-            },
+        properties = new YuckProperty[] {
+          new() {
+            name = "onclick",
+              description = " command to run when the button is activated either by leftclicking or keyboard",
+              dataType = YuckDataType.YuckString,
+          },
+          new() {
+            name = "onmiddleclick",
+              description = "command to run when the button is middleclicked",
+              dataType = YuckDataType.YuckBool,
+          },
+          new() {
+            name = "onrightclick",
+              description = "command to run when the button is rightclicked",
+              dataType = YuckDataType.YuckString
+          },
         }.Concat(_timeOutProperty).Concat(_commonGtkWidgetProperties).ToArray()
     },
     new() {
       name = "image",
         description = "A widget displaying an image.",
         IsGtkWidgetType = true,
-        properties = new YuckProperty[]{
-            new(){
-                name = "path",
-                description = " path to the image file",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "image-width",
-                description = "width of the image",
-                dataType = YuckDataType.YuckInt
-            },
-            new(){
-                name = "image-height",
-                description = "height of the image",
-                dataType = YuckDataType.YuckInt
-            },
-            new(){
-                name = "preserve-aspect-ratio",
-                description = "whether to keep the aspect ratio when resizing an image. Default: true, false doesn't work for all image types",
-                dataType = YuckDataType.YuckBool
-            },
-            new(){
-                name = "fill-svg",
-                description = "sets the color of svg images",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name ="icon",
-                description = "name of a theme icon",
-                dataType = YuckDataType.YuckString,
-            },
-            new(){
-                name = "icon-size",
-                description = "size of the theme icon",
-                dataType = YuckDataType.YuckString
-            },
+        properties = new YuckProperty[] {
+          new() {
+            name = "path",
+              description = " path to the image file",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "image-width",
+              description = "width of the image",
+              dataType = YuckDataType.YuckInt
+          },
+          new() {
+            name = "image-height",
+              description = "height of the image",
+              dataType = YuckDataType.YuckInt
+          },
+          new() {
+            name = "preserve-aspect-ratio",
+              description = "whether to keep the aspect ratio when resizing an image. Default: true, false doesn't work for all image types",
+              dataType = YuckDataType.YuckBool
+          },
+          new() {
+            name = "fill-svg",
+              description = "sets the color of svg images",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "icon",
+              description = "name of a theme icon",
+              dataType = YuckDataType.YuckString,
+          },
+          new() {
+            name = "icon-size",
+              description = "size of the theme icon",
+              dataType = YuckDataType.YuckString
+          },
         }.Concat(_commonGtkWidgetProperties).ToArray()
     },
     new() {
@@ -514,21 +509,21 @@ public static class YuckTypesProvider
         IsGtkWidgetType = true,
         AreWidgetsEmbeddable = true,
         properties = new YuckProperty[] {
-            new(){
-                name = "orientation",
-                description = "orientation of the box. possible values: 'vertical', 'v', 'horizontal', 'h'",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "spacing",
-                description = "spacing between elements",
-                dataType = YuckDataType.YuckInt
-            },
-            new(){
-                name = "space-evenly",
-                description = "space the widgets evenly.",
-                dataType = YuckDataType.YuckBool
-            }
+          new() {
+            name = "orientation",
+              description = "orientation of the box. possible values: 'vertical', 'v', 'horizontal', 'h'",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "spacing",
+              description = "spacing between elements",
+              dataType = YuckDataType.YuckInt
+          },
+          new() {
+            name = "space-evenly",
+              description = "space the widgets evenly.",
+              dataType = YuckDataType.YuckBool
+          }
         }.Concat(_commonGtkWidgetProperties).ToArray()
     },
     new() {
@@ -548,12 +543,12 @@ public static class YuckTypesProvider
     new() {
       name = "centerbox",
         description = "A box that must contain EXACTLY 3 children that will be laid out at the start, center, and end of the container",
-        properties = new YuckProperty[]{
-              new(){
-                name = "orientation",
-                description = "orientation of the widget. Possible values: 'vertical', 'v', 'horizontal', 'h'",
-                dataType = YuckDataType.YuckString
-            },
+        properties = new YuckProperty[] {
+          new() {
+            name = "orientation",
+              description = "orientation of the widget. Possible values: 'vertical', 'v', 'horizontal', 'h'",
+              dataType = YuckDataType.YuckString
+          },
         }.Concat(_commonGtkWidgetProperties).ToArray()
     },
     new() {
@@ -561,17 +556,17 @@ public static class YuckTypesProvider
         description = "A container with a single child that can scroll.",
         IsGtkWidgetType = true,
         AreWidgetsEmbeddable = true,
-        properties = new YuckProperty[]{
-            new(){
-                name = "hscroll",
-                description = "scroll horizontally",
-                dataType = YuckDataType.YuckBool
-            },
-            new(){
-                name = "vscroll",
-                description = "scroll vertically",
-                dataType = YuckDataType.YuckBool
-            }
+        properties = new YuckProperty[] {
+          new() {
+            name = "hscroll",
+              description = "scroll horizontally",
+              dataType = YuckDataType.YuckBool
+          },
+          new() {
+            name = "vscroll",
+              description = "scroll vertically",
+              dataType = YuckDataType.YuckBool
+          }
         }.Concat(_commonGtkWidgetProperties).ToArray()
     },
     new() {
@@ -579,141 +574,141 @@ public static class YuckTypesProvider
         description = "A container which can receive events and must contain exactly one child.",
         IsGtkWidgetType = true,
         AreWidgetsEmbeddable = true,
-        properties = new YuckProperty[]{
-            new(){
-                name = "onscroll",
-                description = "event to execute when the user scrolls with the mouse over the widget.",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "onhover",
-                description = "event to execute when the user hovers over the widget",
-                dataType = YuckDataType.YuckString,
-            },
-            new(){
-                name = "onhoverlost",
-                description = "event to execute when the user losts hovers over the widget",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "cursor",
-                description = "Cursor to show while hovering (see gtk3-cursors for possible names)",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "ondropped",
-                description = "Command to execute when something is dropped on top of this element. The placeholder {} used in the command will be replaced with the uri to the dropped thing.",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "dragvalue",
-                description = "URI that will be provided when dragging from this widget",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "dragtype",
-                description = "Type of value that should be dragged from this widget. Possible values: 'file', 'text'",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "onclick",
-                description = "command to run when the widget is clicked",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "onmiddleclick",
-                description = "command to run when the widget is middleclicked",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "onrightclick",
-                description = "command to run when the widget is rightclicked",
-                dataType = YuckDataType.YuckString
-            }
+        properties = new YuckProperty[] {
+          new() {
+            name = "onscroll",
+              description = "event to execute when the user scrolls with the mouse over the widget.",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "onhover",
+              description = "event to execute when the user hovers over the widget",
+              dataType = YuckDataType.YuckString,
+          },
+          new() {
+            name = "onhoverlost",
+              description = "event to execute when the user losts hovers over the widget",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "cursor",
+              description = "Cursor to show while hovering (see gtk3-cursors for possible names)",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "ondropped",
+              description = "Command to execute when something is dropped on top of this element. The placeholder {} used in the command will be replaced with the uri to the dropped thing.",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "dragvalue",
+              description = "URI that will be provided when dragging from this widget",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "dragtype",
+              description = "Type of value that should be dragged from this widget. Possible values: 'file', 'text'",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "onclick",
+              description = "command to run when the widget is clicked",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "onmiddleclick",
+              description = "command to run when the widget is middleclicked",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "onrightclick",
+              description = "command to run when the widget is rightclicked",
+              dataType = YuckDataType.YuckString
+          }
         }.Concat(_commonGtkWidgetProperties).ToArray()
     },
     new() {
       name = "label",
         description = "A text widget giving you more control over how the text is displayed.",
         IsGtkWidgetType = true,
-        properties = new YuckProperty[]{
-            new(){
-                name = "text",
-                description = "the text to display",
-                dataType = YuckDataType.YuckString,
-            },
-            new(){
-                name = "truncate",
-                description = "whether to truncate text (or pango markup). If show-truncated is false, or if limit-width has a value, this property has no effect and truncation is enabled.",
-                dataType = YuckDataType.YuckBool
-            },
-            new(){
-                name = "limit-width",
-                description = "maximum count of characters to display",
-                dataType = YuckDataType.YuckInt,
-            },
-            new(){
-                name = "truncate-left",
-                description = "whether to truncate on the left side",
-               dataType =  YuckDataType.YuckBool,
-            },
-            new(){
-                name = "show-truncated",
-                description = "show whether the text was truncated. Disabling it will also disable dynamic truncation (the labels won't be truncated more than limit-width, even if there is not enough space for them), and will completly disable truncation on pango markup.",
-                dataType = YuckDataType.YuckBool,
-            },
-            new(){
-                name = "uindent",
-                description = " whether to remove leading spaces",
-                dataType = YuckDataType.YuckBool,
-            },
-            new(){
-                name = "markup",
-                description = "Pango markup to display",
-                dataType = YuckDataType.YuckString,
-            },
-            new(){
-                name = "wrap",
-                description = "Wrap the text. This mainly makes sense if you set the width of this widget.",
-                dataType = YuckDataType.YuckBool,
-            },
-            new(){
-                name = "angle",
-                description = "the angle of rotation for the label (between 0 - 360)",
-                dataType = YuckDataType.YuckFloat,
-            },
-            new(){
-                name = "gravity",
-                description = " the gravity of the string (south, east, west, north, auto). Text will want to face the direction of gravity.",
-            dataType = YuckDataType.YuckString,
-            },
-            new(){
-                name = "xalign",
-                description = " the alignment of the label text on the x axis (between 0 - 1, 0 -> left, 0.5 -> center, 1 -> right)",
-                dataType = YuckDataType.YuckFloat,
-            },
-            new(){
-                name=  "yalign",
-                description = "the alignment of the label text on the y axis (between 0 - 1, 0 -> bottom, 0.5 -> center, 1 -> top)",
-                dataType = YuckDataType.YuckFloat
-            },
-            new(){
-                name = "justify",
-                description = " the justification of the label text (left, right, center, fill)",
-                dataType = YuckDataType.YuckString
-            }
+        properties = new YuckProperty[] {
+          new() {
+            name = "text",
+              description = "the text to display",
+              dataType = YuckDataType.YuckString,
+          },
+          new() {
+            name = "truncate",
+              description = "whether to truncate text (or pango markup). If show-truncated is false, or if limit-width has a value, this property has no effect and truncation is enabled.",
+              dataType = YuckDataType.YuckBool
+          },
+          new() {
+            name = "limit-width",
+              description = "maximum count of characters to display",
+              dataType = YuckDataType.YuckInt,
+          },
+          new() {
+            name = "truncate-left",
+              description = "whether to truncate on the left side",
+              dataType = YuckDataType.YuckBool,
+          },
+          new() {
+            name = "show-truncated",
+              description = "show whether the text was truncated. Disabling it will also disable dynamic truncation (the labels won't be truncated more than limit-width, even if there is not enough space for them), and will completly disable truncation on pango markup.",
+              dataType = YuckDataType.YuckBool,
+          },
+          new() {
+            name = "uindent",
+              description = " whether to remove leading spaces",
+              dataType = YuckDataType.YuckBool,
+          },
+          new() {
+            name = "markup",
+              description = "Pango markup to display",
+              dataType = YuckDataType.YuckString,
+          },
+          new() {
+            name = "wrap",
+              description = "Wrap the text. This mainly makes sense if you set the width of this widget.",
+              dataType = YuckDataType.YuckBool,
+          },
+          new() {
+            name = "angle",
+              description = "the angle of rotation for the label (between 0 - 360)",
+              dataType = YuckDataType.YuckFloat,
+          },
+          new() {
+            name = "gravity",
+              description = " the gravity of the string (south, east, west, north, auto). Text will want to face the direction of gravity.",
+              dataType = YuckDataType.YuckString,
+          },
+          new() {
+            name = "xalign",
+              description = " the alignment of the label text on the x axis (between 0 - 1, 0 -> left, 0.5 -> center, 1 -> right)",
+              dataType = YuckDataType.YuckFloat,
+          },
+          new() {
+            name = "yalign",
+              description = "the alignment of the label text on the y axis (between 0 - 1, 0 -> bottom, 0.5 -> center, 1 -> top)",
+              dataType = YuckDataType.YuckFloat
+          },
+          new() {
+            name = "justify",
+              description = " the justification of the label text (left, right, center, fill)",
+              dataType = YuckDataType.YuckString
+          }
         }.Concat(_commonGtkWidgetProperties).ToArray()
     },
     new() {
       name = "literal",
         description = "A widget that allows you to render arbitrary yuck.",
         IsGtkWidgetType = true,
-        properties = new YuckProperty[]{
-            new(){
-                name = "content",
-                description = " inline yuck that will be rendered as a widget.",
-                dataType = YuckDataType.YuckString
-            },
+        properties = new YuckProperty[] {
+          new() {
+            name = "content",
+              description = " inline yuck that will be rendered as a widget.",
+              dataType = YuckDataType.YuckString
+          },
         }.Concat(_commonGtkWidgetProperties).ToArray()
     },
     new() {
@@ -721,46 +716,46 @@ public static class YuckTypesProvider
         description = "A widget that displays a calendar.",
         IsGtkWidgetType = true,
         properties = new YuckProperty[] {
-            new(){
-                name = "day",
-                description = "the selected day",
-                dataType = YuckDataType.YuckFloat
-            },
-            new(){
-                name = "month",
-                description = "the selected month",
-                dataType = YuckDataType.YuckFloat
-            },
-            new(){
-                name = "year",
-                description = "the selected year",
-                dataType = YuckDataType.YuckFloat
-            },
-            new(){
-                name = "show-details",
-                description = "show details",
-                dataType = YuckDataType.YuckBool
-            },
-            new(){
-                name = "show-heading",
-                description = "show heading line",
-                dataType = YuckDataType.YuckBool
-            },
-            new(){
-                name = "show-day-names",
-                description = "show names of days",
-                dataType = YuckDataType.YuckBool
-            },
-            new(){
-                name=  "show-week-numbers",
-                description = "show week numbers",
-                dataType = YuckDataType.YuckBool
-            },
-            new(){
-                name = "onclick",
-                description = "command to run when the user selects a date. The {0} placeholder will be replaced by the selected day, {1} will be replaced by the month, and {2} by the year.",
-                dataType = YuckDataType.YuckString
-            },
+          new() {
+            name = "day",
+              description = "the selected day",
+              dataType = YuckDataType.YuckFloat
+          },
+          new() {
+            name = "month",
+              description = "the selected month",
+              dataType = YuckDataType.YuckFloat
+          },
+          new() {
+            name = "year",
+              description = "the selected year",
+              dataType = YuckDataType.YuckFloat
+          },
+          new() {
+            name = "show-details",
+              description = "show details",
+              dataType = YuckDataType.YuckBool
+          },
+          new() {
+            name = "show-heading",
+              description = "show heading line",
+              dataType = YuckDataType.YuckBool
+          },
+          new() {
+            name = "show-day-names",
+              description = "show names of days",
+              dataType = YuckDataType.YuckBool
+          },
+          new() {
+            name = "show-week-numbers",
+              description = "show week numbers",
+              dataType = YuckDataType.YuckBool
+          },
+          new() {
+            name = "onclick",
+              description = "command to run when the user selects a date. The {0} placeholder will be replaced by the selected day, {1} will be replaced by the month, and {2} by the year.",
+              dataType = YuckDataType.YuckString
+          },
         }.Concat(_commonGtkWidgetProperties).Concat(_timeOutProperty).ToArray()
     },
     new() {
@@ -768,21 +763,21 @@ public static class YuckTypesProvider
         description = "A widget that displays one of its children at a time.",
         IsGtkWidgetType = true,
         AreWidgetsEmbeddable = true,
-        properties = new YuckProperty[]{
-          new(){
-              name = "selected",
+        properties = new YuckProperty[] {
+          new() {
+            name = "selected",
               description = "index of child which should be shown",
               dataType = YuckDataType.YuckInt
           },
-          new(){
-              name = "transition",
+          new() {
+            name = "transition",
               description = "he name of the transition. Possible values: 'slideright', 'slideleft', 'slideup', 'slidedown', 'crossfade', 'none'",
               dataType = YuckDataType.YuckString
           },
-          new(){
+          new() {
             name = "same-size",
-            description = "sets whether all children should be the same size",
-            dataType = YuckDataType.YuckBool
+              description = "sets whether all children should be the same size",
+              dataType = YuckDataType.YuckBool
           }
         }.Concat(_commonGtkWidgetProperties).ToArray()
     },
@@ -791,211 +786,211 @@ public static class YuckTypesProvider
         description = "A widget that applies transformations to its content. They are applied in the following order: rotate -> translate -> scale.",
         IsGtkWidgetType = true,
         AreWidgetsEmbeddable = true,
-        properties = new YuckProperty[]{
-            new(){
-                name = "rotate",
-                description = "the percentage to rotate",
-                dataType = YuckDataType.YuckFloat
-            },
-            new(){
-                name = "transform-origin-x",
-                description = "x coordinate of origin of transformation (px or %)",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "transform-origin-y",
-                description = "y coordinate of origin of transformation (px or %)",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "translate-x",
-                description = "the amount to translate in the x direction (px or %)",
-                dataType = YuckDataType.YuckString,
-            },
-             new(){
-                name = "translate-y",
-                description = "the amount to translate in the y direction (px or %)",
-                dataType = YuckDataType.YuckString,
-            },
-             new(){
-                 name=  "scale-x",
-                description = "the amount to scale in the x direction (px or %)",
-                dataType = YuckDataType.YuckString
-             },
-             new(){
-                 name=  "scale-y",
-                description = "the amount to scale in the y direction (px or %)",
-                dataType = YuckDataType.YuckString
-             }
+        properties = new YuckProperty[] {
+          new() {
+            name = "rotate",
+              description = "the percentage to rotate",
+              dataType = YuckDataType.YuckFloat
+          },
+          new() {
+            name = "transform-origin-x",
+              description = "x coordinate of origin of transformation (px or %)",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "transform-origin-y",
+              description = "y coordinate of origin of transformation (px or %)",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "translate-x",
+              description = "the amount to translate in the x direction (px or %)",
+              dataType = YuckDataType.YuckString,
+          },
+          new() {
+            name = "translate-y",
+              description = "the amount to translate in the y direction (px or %)",
+              dataType = YuckDataType.YuckString,
+          },
+          new() {
+            name = "scale-x",
+              description = "the amount to scale in the x direction (px or %)",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "scale-y",
+              description = "the amount to scale in the y direction (px or %)",
+              dataType = YuckDataType.YuckString
+          }
         }.Concat(_commonGtkWidgetProperties).ToArray()
     },
     new() {
       name = "circular-progress",
         description = "A widget that displays a circular progress bar.",
         IsGtkWidgetType = true,
-        properties = new YuckProperty[]{
-            new(){
-                name = "value",
-                description = " the value, between 0 - 100",
-                dataType = YuckDataType.YuckFloat
-            },
-            new(){
-                name = "start-at",
-                description = "the percentage that the circle should start at",
-                dataType = YuckDataType.YuckFloat
-            },
-            new(){
-                name = "thickness",
-                description = "the thickness of the circle",
-                dataType = YuckDataType.YuckFloat
-            },
-            new(){
-                name = "clockwise",
-                description = "whether the progress bar spins clockwise or counter clockwise",
-                dataType = YuckDataType.YuckBool
-            }
+        properties = new YuckProperty[] {
+          new() {
+            name = "value",
+              description = " the value, between 0 - 100",
+              dataType = YuckDataType.YuckFloat
+          },
+          new() {
+            name = "start-at",
+              description = "the percentage that the circle should start at",
+              dataType = YuckDataType.YuckFloat
+          },
+          new() {
+            name = "thickness",
+              description = "the thickness of the circle",
+              dataType = YuckDataType.YuckFloat
+          },
+          new() {
+            name = "clockwise",
+              description = "whether the progress bar spins clockwise or counter clockwise",
+              dataType = YuckDataType.YuckBool
+          }
         }.Concat(_commonGtkWidgetProperties).ToArray()
     },
     new() {
       name = "graph",
         description = "A widget that displays a graph showing how a given value changes over time.",
         IsGtkWidgetType = true,
-        properties = new YuckProperty[]{
-            new(){
-                name = "value",
-                description = "the value, between 0 - 100",
-                dataType = YuckDataType.YuckFloat
-            },
-            new(){
-                name = "thickness",
-                description = "the thickness of the line",
-                dataType = YuckDataType.YuckFloat
-            },
-            new(){
-                name = "time-range",
-                description = "the range of time to show",
-                dataType = YuckDataType.YuckDuration,
-            },
-            new(){
-                name = "min",
-                description = "the minimum value to show (defaults to 0 if value_max is provided)",
-                dataType = YuckDataType.YuckFloat
-            },
-               new(){
-                name = "max",
-                description = "the maximum value to show",
-                dataType = YuckDataType.YuckFloat
-            },
-              new(){
-                  name = "dynamic",
-                  description = "whether the y range should dynamically change based on value",
-                  dataType = YuckDataType.YuckBool
-              } ,
-              new(){
-                  name = "line-style",
-                  description = " changes the look of the edges in the graph. Values: 'miter' (default), 'round'",
-                  dataType = YuckDataType.YuckString
-              },
-              new(){
-                  name = "flip-x",
-                  description = " whether the x axis should go from high to low",
-                  dataType = YuckDataType.YuckBool
-              },
-              new(){
-                  name = "flip-y",
-                  description = " whether the y axis should go from high to low",
-                  dataType = YuckDataType.YuckBool
-              },
-            new(){
-                name = "vertical",
-                description = " if set to true, the x and y axes will be exchanged",
-                dataType = YuckDataType.YuckBool
-            }
+        properties = new YuckProperty[] {
+          new() {
+            name = "value",
+              description = "the value, between 0 - 100",
+              dataType = YuckDataType.YuckFloat
+          },
+          new() {
+            name = "thickness",
+              description = "the thickness of the line",
+              dataType = YuckDataType.YuckFloat
+          },
+          new() {
+            name = "time-range",
+              description = "the range of time to show",
+              dataType = YuckDataType.YuckDuration,
+          },
+          new() {
+            name = "min",
+              description = "the minimum value to show (defaults to 0 if value_max is provided)",
+              dataType = YuckDataType.YuckFloat
+          },
+          new() {
+            name = "max",
+              description = "the maximum value to show",
+              dataType = YuckDataType.YuckFloat
+          },
+          new() {
+            name = "dynamic",
+              description = "whether the y range should dynamically change based on value",
+              dataType = YuckDataType.YuckBool
+          },
+          new() {
+            name = "line-style",
+              description = " changes the look of the edges in the graph. Values: 'miter' (default), 'round'",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "flip-x",
+              description = " whether the x axis should go from high to low",
+              dataType = YuckDataType.YuckBool
+          },
+          new() {
+            name = "flip-y",
+              description = " whether the y axis should go from high to low",
+              dataType = YuckDataType.YuckBool
+          },
+          new() {
+            name = "vertical",
+              description = " if set to true, the x and y axes will be exchanged",
+              dataType = YuckDataType.YuckBool
+          }
         }.Concat(_commonGtkWidgetProperties).ToArray()
     },
     new() {
       name = "systray",
         description = "Tray for system notifier icons.",
-        IsGtkWidgetType = true ,
+        IsGtkWidgetType = true,
         properties = new YuckProperty[] {
-            new(){
-                name = "spacing",
-                description = "spacing between elements",
-                dataType = YuckDataType.YuckInt,
-            },
-            new(){
-                name = "orientation",
-                description = "orientation of the box. possible values: 'vertical', 'v', 'horizontal', 'h'",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "space-evenly",
-                description = "space the widgets evenly.",
-                dataType = YuckDataType.YuckBool
-            },
-            new(){
-                name = "size of icons in the tray",
-                description = "size of icons in the tray",
-                dataType = YuckDataType.YuckInt,
-            },
-            new(){
-                name = "prepend-new",
-                description = "prepend new icons",
-                dataType = YuckDataType.YuckBool
-            }
+          new() {
+            name = "spacing",
+              description = "spacing between elements",
+              dataType = YuckDataType.YuckInt,
+          },
+          new() {
+            name = "orientation",
+              description = "orientation of the box. possible values: 'vertical', 'v', 'horizontal', 'h'",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "space-evenly",
+              description = "space the widgets evenly.",
+              dataType = YuckDataType.YuckBool
+          },
+          new() {
+            name = "size of icons in the tray",
+              description = "size of icons in the tray",
+              dataType = YuckDataType.YuckInt,
+          },
+          new() {
+            name = "prepend-new",
+              description = "prepend new icons",
+              dataType = YuckDataType.YuckBool
+          }
         }
     },
 
     //special types 
-    new(){
-        name = "geometry",
+    new() {
+      name = "geometry",
         description = "Size and positional description for a the window geometry property",
         //not ideal, will fix this later
         IsGtkWidgetType = true,
-        properties = new YuckProperty[]{
-            new(){
-                name = "x",
-                description = "The x-axis position",
-                dataType = YuckDataType.YuckString
-            },
-              new(){
-                name = "y",
-                description = "The y-axis position",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "width",
-                description = "The width of the window",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "height",
-                description = "The height of the window",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "anchor",
-                description = "The positional anchor of the window e.g top left, top center, bottom right, e.t.c",
-                dataType = YuckDataType.YuckString
-            }
+        properties = new YuckProperty[] {
+          new() {
+            name = "x",
+              description = "The x-axis position",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "y",
+              description = "The y-axis position",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "width",
+              description = "The width of the window",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "height",
+              description = "The height of the window",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "anchor",
+              description = "The positional anchor of the window e.g top left, top center, bottom right, e.t.c",
+              dataType = YuckDataType.YuckString
+          }
         }
     },
     new() {
-        name = "struts",
+      name = "struts",
         description = "Reserve struts for X11",
         //not ideal, will fix this later,
         IsGtkWidgetType = true,
         properties = new YuckProperty[] {
-            new(){
-                name = "distance",
-                description = "The distance",
-                dataType = YuckDataType.YuckString
-            },
-            new(){
-                name = "side",
-                description = "The side allowance",
-                dataType = YuckDataType.YuckString
-            }
+          new() {
+            name = "distance",
+              description = "The distance",
+              dataType = YuckDataType.YuckString
+          },
+          new() {
+            name = "side",
+              description = "The side allowance",
+              dataType = YuckDataType.YuckString
+          }
         }
     }
   };

@@ -4,14 +4,13 @@ public class SExpressionTest
 {
 
     /**Test cases for isTopLevel()
-     * All testcases must end with '(' Because that's the only thing that will trigger this method
-     * */ 
+     * All testcases must end with '(' Because that's the only thing that will trigger this method. Cases must not have whitespaces at the end.
+     * */
     private string[] _isTopLevelTestCases = new string[] {
         //1
         @"(defwindow 
             (defvar
-                (
-            ",
+                (",
 
         //2
          @"(",
@@ -20,9 +19,7 @@ public class SExpressionTest
          @"((defpoll medianame :inital '34242'))
             (defwindow media ;unclosed window
                 (label :name testlabel)
-                 (   
-             
-         ", 
+                 (", 
          //4 
          @"(defpoll medianame :initial '3313')
             (defwindow media ;unclosed window
@@ -42,20 +39,23 @@ public class SExpressionTest
             ;(defpoll (defwidget))
             )
             ;(defpoll)
-            (
-        ",
+            (",
         //7
         @"(defwidget media
            ; )
 
-          (  ",
+          (",
 
         //8
         @"(defwidget
             )
         (defpoll 'curl ; ()fsfsfsfsf')
-        (
-        "
+        (",
+
+         //9
+         @"(defwindow )
+            (defpoll hyprvr :interval ""Hyprland --version|awk '{print $1; exit}'"")
+            ("
     };
 
     /*Test cases fot GetParentNode()
@@ -70,11 +70,9 @@ public class SExpressionTest
         //2
         @"(defpoll 
             (defwidget 
-                (deflisten
+                deflisten
                     (defvar
-                        (                 
-             
-        ",
+                        (",
         //3
         @"(defpoll
            (defwindow
@@ -87,8 +85,7 @@ public class SExpressionTest
         )
         (defwindow 
             (defwidget 
-            ( 
-           ",
+            (",
 
         //4 
         @"(defpoll 
@@ -97,10 +94,7 @@ public class SExpressionTest
                     (box )
                     (box )
                     (table )
-                    (
-                 
-             
-        ",
+                    (",
 
         //5 
         @"(defpoll
@@ -115,9 +109,7 @@ public class SExpressionTest
     text
     (button :onclick notify-send 'Hello' 'Hello, ${name}'
       Greet))
-    (
-    
-",
+    (",
 //7 
 @"
  (box :orientation v :spacing -200  :class media-box :visible isSpotify
@@ -130,50 +122,50 @@ public class SExpressionTest
      :gddgdg
      (box )
     )
-   ( 
-  "
-
+   ("
     };
     [Fact]
     public void IsTopLevelTest()
     {
-       var CompletionHandlerLoggerMock = new Mock<Microsoft.Extensions.Logging.ILogger<YuckLS.Handlers.CompletionHandler>>();
-        var instance1 = new SExpression(_isTopLevelTestCases[0],CompletionHandlerLoggerMock.Object).IsTopLevel();
-        var instance2 = new SExpression(_isTopLevelTestCases[1],CompletionHandlerLoggerMock.Object).IsTopLevel();
-        var instance3 = new SExpression(_isTopLevelTestCases[2],CompletionHandlerLoggerMock.Object).IsTopLevel();
-        var instance4 = new SExpression(_isTopLevelTestCases[3],CompletionHandlerLoggerMock.Object).IsTopLevel();
-        var instance5 = new SExpression(_isTopLevelTestCases[4],CompletionHandlerLoggerMock.Object).IsTopLevel();
-        var instance6 = new SExpression(_isTopLevelTestCases[5],CompletionHandlerLoggerMock.Object).IsTopLevel();
-        var instance7 = new SExpression(_isTopLevelTestCases[6],CompletionHandlerLoggerMock.Object).IsTopLevel();
-        var instance8 = new SExpression(_isTopLevelTestCases[7],CompletionHandlerLoggerMock.Object).IsTopLevel();
-        Assert.False(instance1);
-        Assert.True(instance2);
-        Assert.False(instance3);
-        Assert.False(instance4);
-        Assert.True(instance5);
-        Assert.True(instance6);
-        Assert.False(instance7);
-       Assert.True(instance8);
+        var CompletionHandlerLoggerMock = new Mock<Microsoft.Extensions.Logging.ILogger<YuckLS.Handlers.CompletionHandler>>();
+        var test1 = new SExpression(_isTopLevelTestCases[0], CompletionHandlerLoggerMock.Object).IsTopLevel();
+        var test2 = new SExpression(_isTopLevelTestCases[1], CompletionHandlerLoggerMock.Object).IsTopLevel();
+        var test3 = new SExpression(_isTopLevelTestCases[2], CompletionHandlerLoggerMock.Object).IsTopLevel();
+        var test4 = new SExpression(_isTopLevelTestCases[3], CompletionHandlerLoggerMock.Object).IsTopLevel();
+        var test5 = new SExpression(_isTopLevelTestCases[4], CompletionHandlerLoggerMock.Object).IsTopLevel();
+        var test6 = new SExpression(_isTopLevelTestCases[5], CompletionHandlerLoggerMock.Object).IsTopLevel();
+        var test7 = new SExpression(_isTopLevelTestCases[6], CompletionHandlerLoggerMock.Object).IsTopLevel();
+        var test8 = new SExpression(_isTopLevelTestCases[7], CompletionHandlerLoggerMock.Object).IsTopLevel();
+        var test9 = new SExpression(_isTopLevelTestCases[8], CompletionHandlerLoggerMock.Object).IsTopLevel();
+        Assert.False(test1);
+        Assert.True(test2);
+        Assert.False(test3);
+        Assert.False(test4);
+        Assert.True(test5);
+        Assert.True(test6);
+        Assert.False(test7);
+        Assert.True(test8);
+        Assert.True(test9);
     }
 
     [Fact]
     public void GetParentNodeTest()
     {
         //\(\w+[^\(]*\)
-     var CompletionHandlerLoggerMock = new Mock<Microsoft.Extensions.Logging.ILogger<YuckLS.Handlers.CompletionHandler>>();
-        var instance1 = new SExpression(_getParentNodeTestCases[0],CompletionHandlerLoggerMock.Object).GetParentNode();
-        var instance2 = new SExpression(_getParentNodeTestCases[1],CompletionHandlerLoggerMock.Object).GetParentNode();
-        var instance3 = new SExpression(_getParentNodeTestCases[2],CompletionHandlerLoggerMock.Object).GetParentNode();
-        var instance4 = new SExpression(_getParentNodeTestCases[3],CompletionHandlerLoggerMock.Object).GetParentNode();
-        var instance5 = new SExpression(_getParentNodeTestCases[4],CompletionHandlerLoggerMock.Object).GetParentNode();
-        var instance6 = new SExpression(_getParentNodeTestCases[5],CompletionHandlerLoggerMock.Object).GetParentNode();
-        var instance7 = new SExpression(_getParentNodeTestCases[6],CompletionHandlerLoggerMock.Object).GetParentNode();
-        Assert.Equal(instance1, "box");
-        Assert.Equal(instance2, "defvar");
-        Assert.Equal(instance3, "defwidget");
-        Assert.Equal(instance4,"label");
-        Assert.Equal(instance5, "defpoll");
-        Assert.Equal(instance6, "defwindow");
-        Assert.Equal(instance7,"box");
-    } 
+        var CompletionHandlerLoggerMock = new Mock<Microsoft.Extensions.Logging.ILogger<YuckLS.Handlers.CompletionHandler>>();
+        var test1 = new SExpression(_getParentNodeTestCases[0], CompletionHandlerLoggerMock.Object).GetParentNode();
+        var test2 = new SExpression(_getParentNodeTestCases[1], CompletionHandlerLoggerMock.Object).GetParentNode();
+        var test3 = new SExpression(_getParentNodeTestCases[2], CompletionHandlerLoggerMock.Object).GetParentNode();
+        var test4 = new SExpression(_getParentNodeTestCases[3], CompletionHandlerLoggerMock.Object).GetParentNode();
+        var test5 = new SExpression(_getParentNodeTestCases[4], CompletionHandlerLoggerMock.Object).GetParentNode();
+        var test6 = new SExpression(_getParentNodeTestCases[5], CompletionHandlerLoggerMock.Object).GetParentNode();
+        var test7 = new SExpression(_getParentNodeTestCases[6], CompletionHandlerLoggerMock.Object).GetParentNode();
+        Assert.Equal(test1, "box");
+        Assert.Equal(test2, "defvar");
+        Assert.Equal(test3, "defwidget");
+        Assert.Equal(test4, "label");
+        Assert.Equal(test5, "defpoll");
+        Assert.Equal(test6, "defwindow");
+        Assert.Equal(test7, "box");
+    }
 }

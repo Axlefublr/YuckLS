@@ -13,19 +13,14 @@ internal class SExpression
 
     public SExpression(string _text, ILogger<YuckLS.Handlers.CompletionHandler> _logger)
     {
-        this._text = _text.Trim();
+        //removed trimming because we need white space to also trigger completion
+//        this._text = _text.Trim();
+        this._text = _text;
         this._logger = _logger;
         _completionText = this._text;
         //recursively delete char in quotes to prevent interferance
-        int quotesMatchCount = 0;
-        string quotesMatchPattern = "['\"`][^'\"`]*['\"`]";
-        do
-        {
-            var quotesMatches = Regex.Matches(_completionText, quotesMatchPattern).Count();
-            _completionText = Regex.Replace(_completionText, quotesMatchPattern, "");
-        }
-        while (quotesMatchCount > 0);
-
+        
+        _completionText = RemoveAllQuotedChars(_completionText);
         //delete comments from text to prevent interferance, this must be dont after characters in quotes have been removed or completer might break 
         string[] lines = this._completionText.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
         for (int i = 0; i < lines.Length; i++)
@@ -51,6 +46,7 @@ internal class SExpression
     ///</summary>
     public YuckCompletionContext TryGetCompletionContext()
     {
+        //_logger.LogError($"Triggering completer for  {_text.Last()}");
         if (_text.Last() == _openTag)
         {
             //if user's cursor is about to create a top level tag 
@@ -96,6 +92,7 @@ internal class SExpression
     internal protected bool IsTopLevel()
     {
         int depth = 0;
+        _logger.LogError(_completionText);
         foreach (char c in _completionText)
         {
             if (c == '(')
@@ -134,5 +131,50 @@ internal class SExpression
         }
         return null;
     }
+    ///<summary>
+    ///Will attempt to remove all characters in quotes by looping through every character and checking if the current character can close an open open quote 
+    ///</summary>
+    ///
+    private string RemoveAllQuotedChars(string text){
+        //copy text to another variable
+        string textCopy = text;
+        bool hasEncounteredOpenQuote = false;
+        char quote = default;
+        int indexOfOpenQuote = 0;
+        //temporary(hopefully) very bad very inefficient solution to a very simple problem
+        bool shouldRestartLoop = false;
+        for(int i = 0; i < textCopy.Length; i++){
+            //if we havent found a quote opener, skip to next char 
+            if(!hasEncounteredOpenQuote){
+                if(text[i] == '\"' || text[i] == '\'' || text[i] == '`'){
+                    hasEncounteredOpenQuote = true;
+                    quote = text[i];
+                    indexOfOpenQuote = i;
+                }
+            }
+            else{
+                //if the current char mathches the open quote 
+                if(text[i] == quote){
+                    //we need to check that the current quote is not escaped to start another quote 
+                    if(text[i-1] == '\\'){ continue;}
+                    
+                    //if it is not escaped, then it is the end of the original quote. Delete the Substring from the textCopy 
+                    textCopy = textCopy.Remove(indexOfOpenQuote, (i-indexOfOpenQuote) + 1);
 
+                    //reset variables 
+                    /*hasEncounteredOpenQuote = false;*/
+                    /*quote = default;*/
+                    /*indexOfOpenQuote = 0;*/
+                    /**/
+                    /*i = indexOfOpenQuote -1;*/
+                    //restart loop 
+                    shouldRestartLoop = true;
+                    break;
+
+                }
+            }
+        }
+        if(shouldRestartLoop) return RemoveAllQuotedChars(textCopy);
+        return textCopy; 
+    }
 }
