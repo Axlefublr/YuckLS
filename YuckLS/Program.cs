@@ -40,13 +40,23 @@ public class Program
     }
     private static void InitLogging()
     {
-        //temporary log location
+        //temporary log location for my computer 
+        if(Path.Exists("/home/noble/Documents/YuckLS/YuckLS/")){
+             string logfile = Path.Combine("/home/noble/Documents/YuckLS/YuckLS/", "yucklsp.log");
+             Log.Logger = new LoggerConfiguration()
+            .WriteTo.File(logfile)
+            .Enrich.FromLogContext()
+            .MinimumLevel.Error()
+            .CreateLogger();
+        }
+        else{
         string logfile = Path.Combine(Path.GetTempPath(), "yucklsp.log");
         Log.Logger = new LoggerConfiguration()
             .WriteTo.File(logfile)
             .Enrich.FromLogContext()
             .MinimumLevel.Verbose()
             .CreateLogger();
+        }
     }
     private static ILanguageServer GetServer() => server;
     
