@@ -55,3 +55,7 @@ language-servers = ["yuckls"]
 
 ❌ Buffer formatting  
 
+
+
+https://github.com/user-attachments/assets/4beb085d-ae2d-4b65-acbd-17479d31cb03
+
