@@ -1,41 +1,121 @@
 namespace YuckLS.Core.Models;
 
 //really wish i had rust enums right about now
-public abstract class YuckCompletionContext {}
-public class TopLevelYuckCompletionContext: YuckCompletionContext {}
-public class WidgetYuckCompletionContext: YuckCompletionContext {}
-public class PropertyYuckCompletionContext: YuckCompletionContext {
-  public YuckType parentType;
+public abstract class YuckCompletionContext
+{
+    protected List<CompletionItem> _items = new();
+    public abstract CompletionList Completions();
+}
+public class TopLevelYuckCompletionContext : YuckCompletionContext
+{
+    public override CompletionList Completions()
+    {
+        foreach (var yuckType in YuckTypesProvider.YuckTypes.Where(p => p.IsTopLevel == true))
+        {
+            _items.Add(new()
+            {
+                Label = yuckType.name,
+                Documentation = new StringOrMarkupContent(yuckType.description),
+                Kind = CompletionItemKind.Class,
+                InsertText = yuckType.name
+            });
+        }
+        return new CompletionList(_items);
+    }
+}
+public class WidgetYuckCompletionContext : YuckCompletionContext
+{
+    public override CompletionList Completions()
+    {
+        foreach (var yuckType in YuckTypesProvider.YuckTypes.Where(p => p.IsGtkWidgetType == true))
+        {
+            _items.Add(new()
+            {
+                Label = yuckType.name,
+                Documentation = new StringOrMarkupContent(yuckType.description),
+                Kind = CompletionItemKind.Class,
+                InsertText = yuckType.name
+            });
+        }
+        return new CompletionList(_items);
+    }
+}
+public class PropertyYuckCompletionContext : YuckCompletionContext
+{
+    public required YuckType parentType;
+
+    public override CompletionList Completions()
+    {
+        var properties = parentType.properties;
+        if (properties is null || properties.Count() == 0) return new CompletionList();
+        foreach (var property in properties)
+        {
+            _items.Add(new()
+            {
+                Label = property.name,
+                Documentation = new StringOrMarkupContent(property.description),
+                Kind = CompletionItemKind.Property,
+                InsertText = property.name
+            });
+        }
+        return new CompletionList(_items);
+    }
+}
+public class PropertySuggestionCompletionContext : YuckCompletionContext
+{
+    public required YuckType parentType;
+    public required YuckProperty parentProperty;
+
+    public override CompletionList Completions()
+    {
+        var suggestions = parentProperty.possibleValues;
+        if (suggestions is null || suggestions.Count() == 0) return new CompletionList();
+
+        foreach (var suggestion in suggestions)
+        {
+            _items.Add(new()
+            {
+                Label = suggestion,
+                Kind = CompletionItemKind.Variable,
+                InsertText = $"\"{suggestion}\""
+            });
+        }
+        return new CompletionList(_items);
+    }
+}
+public class YuckType
+{
+    public required string name;
+    public YuckProperty[] properties = new YuckProperty[] { };
+    public required string description;
+    public bool IsTopLevel = false;
+    public bool AreWidgetsEmbeddable = false;
+    public bool IsGtkWidgetType = false;
 }
 
-public class YuckType {
-  public string name;
-  public YuckProperty[] properties;
-  public string description;
-  public bool IsTopLevel = false;
-  public bool AreWidgetsEmbeddable = false;
-  public bool IsGtkWidgetType = false;
-}
-public class YuckProperty {
-  public string name;
-  public string description;
-  public YuckDataType ? dataType;
-  public string[] ? possibleValues;
+public class YuckProperty
+{
+    public required string name;
+    public required string description;
+    public required YuckDataType? dataType;
+    public string[]? possibleValues;
 }
 
-public enum YuckDataType {
-  YuckString,
-  YuckInt,
-  YuckBool,
-  YuckDuration,
-  YuckFloat,
-  Custom
+public enum YuckDataType
+{
+    YuckString,
+    YuckInt,
+    YuckBool,
+    YuckDuration,
+    YuckFloat,
+    Custom
 };
 /*
  * I should not hard-code these. I just don't know a better way to do it.
  */
-public static class YuckTypesProvider {
-  private static readonly YuckProperty[] _commonGtkWidgetProperties = new YuckProperty[] {
+public static class YuckTypesProvider
+{
+    private static readonly YuckProperty[] _commonGtkWidgetProperties = new YuckProperty[] {
     new() {
       name = "class",
         description = "css class name",
@@ -44,12 +124,14 @@ public static class YuckTypesProvider {
     new() {
       name = "valign",
         description = "how to align this vertically. possible values: 'fill', 'baseline', 'center', 'start', 'end'",
-        dataType = YuckDataType.YuckString
+        dataType = YuckDataType.YuckString,
+        possibleValues = new string[] {"fill", "baseline", "center", "start" , "end"}
     },
     new() {
       name = "halign",
         description = "how to align this horizontally. possible values: 'fill', 'baseline', 'center', 'start', 'end'",
-        dataType = YuckDataType.YuckString
+        dataType = YuckDataType.YuckString,
+        possibleValues = new string[] {"fill", "baseline", "center", "start" , "end"}
     },
     new() {
       name = "vexpand",
@@ -97,7 +179,7 @@ public static class YuckTypesProvider {
         dataType = YuckDataType.YuckString
     }
   };
-  private static YuckProperty[] _timeOutProperty = new YuckProperty[] {
+    private static YuckProperty[] _timeOutProperty = new YuckProperty[] {
     new() {
       name = "timeout",
         description = "timeout of the command: Default: '200ms'",
@@ -105,7 +187,7 @@ public static class YuckTypesProvider {
     },
 
   };
-  public static readonly YuckType[] YuckTypes = new YuckType[] {
+    public static readonly YuckType[] YuckTypes = new YuckType[] {
     /* Top Level */
     new() {
       name = "defwidget",
@@ -407,7 +489,8 @@ public static class YuckTypesProvider {
           new() {
             name = "orientation",
               description = "orientation of the widget. Possible values: 'vertical', 'v', 'horizontal', 'h'",
-              dataType = YuckDataType.YuckString
+              dataType = YuckDataType.YuckString,
+              possibleValues = new string[]{ "vertical", "horizontal"}
           },
         }.Concat(_commonGtkWidgetProperties).ToArray()
     },
@@ -512,7 +595,8 @@ public static class YuckTypesProvider {
           new() {
             name = "orientation",
               description = "orientation of the box. possible values: 'vertical', 'v', 'horizontal', 'h'",
-              dataType = YuckDataType.YuckString
+              dataType = YuckDataType.YuckString,
+              possibleValues = new string[] {"vertical","horizontal"}
           },
           new() {
             name = "spacing",
@@ -542,12 +626,15 @@ public static class YuckTypesProvider {
     },
     new() {
       name = "centerbox",
+        IsGtkWidgetType = true,
+        AreWidgetsEmbeddable = true,
         description = "A box that must contain EXACTLY 3 children that will be laid out at the start, center, and end of the container",
         properties = new YuckProperty[] {
           new() {
             name = "orientation",
               description = "orientation of the widget. Possible values: 'vertical', 'v', 'horizontal', 'h'",
-              dataType = YuckDataType.YuckString
+              dataType = YuckDataType.YuckString,
+              possibleValues = new string[] {"vertical","horizontal"}
           },
         }.Concat(_commonGtkWidgetProperties).ToArray()
     },
@@ -608,7 +695,8 @@ public static class YuckTypesProvider {
           new() {
             name = "dragtype",
               description = "Type of value that should be dragged from this widget. Possible values: 'file', 'text'",
-              dataType = YuckDataType.YuckString
+              dataType = YuckDataType.YuckString,
+              possibleValues = new string[] {"file","text"}
           },
           new() {
             name = "onclick",
@@ -695,7 +783,8 @@ public static class YuckTypesProvider {
           new() {
             name = "justify",
               description = " the justification of the label text (left, right, center, fill)",
-              dataType = YuckDataType.YuckString
+              dataType = YuckDataType.YuckString,
+              possibleValues = new string[] {"left","right","center","fill"}
           }
         }.Concat(_commonGtkWidgetProperties).ToArray()
     },
@@ -771,7 +860,9 @@ public static class YuckTypesProvider {
           },
           new() {
             name = "transition",
-              description = "he name of the transition. Possible values: 'slideright', 'slideleft', 'slideup', 'slidedown', 'crossfade', 'none'",
+              description = "he name of the transition. Possible values: 'slideright', 'slideleft', 'slideup', 'slidedown', 'crossfade', 'none'",               possibleValues = new string[] {
+                  "slideright", "slideleft" ,"slideup" ,"slidedown" , "crossfade" , "none"
+              },
               dataType = YuckDataType.YuckString
           },
           new() {
@@ -921,7 +1012,8 @@ public static class YuckTypesProvider {
           new() {
             name = "orientation",
               description = "orientation of the box. possible values: 'vertical', 'v', 'horizontal', 'h'",
-              dataType = YuckDataType.YuckString
+              dataType = YuckDataType.YuckString,
+              possibleValues = new string[] {"vertical" , "horizontal"}
           },
           new() {
             name = "space-evenly",
