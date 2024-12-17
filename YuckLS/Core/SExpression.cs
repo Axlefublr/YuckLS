@@ -1,17 +1,17 @@
 using System.Text.RegularExpressions;
 using YuckLS.Core.Models;
 using System.Runtime.CompilerServices;
-
+using YuckLS.Services;
 [assembly: InternalsVisibleTo("YuckLS.Test")]
 namespace YuckLS.Core;
 internal class SExpression
 {
     private readonly string _text;
+    //text used for parsing completion.
     private readonly string _completionText;
     private readonly ILogger<YuckLS.Handlers.CompletionHandler> _logger;
-
-
-    public SExpression(string _text, ILogger<YuckLS.Handlers.CompletionHandler> _logger)
+    private IEwwWorkspace _workspace;
+    public SExpression(string _text, ILogger<YuckLS.Handlers.CompletionHandler> _logger, IEwwWorkspace _workspace  )
     {
         //removed trimming because we need white space to also trigger completion
         //        this._text = _text.Trim();
@@ -21,18 +21,10 @@ internal class SExpression
         //recursively delete char in quotes to prevent interferance
 
         _completionText = RemoveAllQuotedChars(_completionText);
-        //delete comments from text to prevent interferance, this must be dont after characters in quotes have been removed or completer might break 
-        string[] lines = this._completionText.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-        for (int i = 0; i < lines.Length; i++)
-        {
-            int semicolonIndex = lines[i].IndexOf(';');
-            if (semicolonIndex >= 0)
-            {
-                lines[i] = lines[i].Substring(0, semicolonIndex);
-            }
-        }
-        //pop last char from text
-        _completionText = string.Join(Environment.NewLine, lines)[..^1];
+        //delete comments from text to prevent interferance, this must be done after characters in quotes have been removed or completer might break and pop last char from text(the completion trigger)
+        _completionText = RemoveComments(_completionText)[..^1];
+        
+        this._workspace = _workspace;
     }
 
 
@@ -66,7 +58,7 @@ internal class SExpression
             //if parentType is still null, then parentNode is none standard. Perhaps custom widget?
             if (parentType == null) return default;
             //check if parentType supports GTK widget nodes
-            if (parentType.AreWidgetsEmbeddable) return new WidgetYuckCompletionContext();
+            if (parentType.AreWidgetsEmbeddable) return new WidgetYuckCompletionContext(_workspace);
         }
 
 
@@ -76,8 +68,8 @@ internal class SExpression
             string parentNode = GetParentNode();
             if (parentNode == null) return default;
 
-            //try to parse the parentNode to a yuck type. Will deal with custom types later
-            YuckType parentType = YuckTypesProvider.YuckTypes?.Where(type => type.name == parentNode)?.First();
+            //try to parse the parentNode to a yuck type. Add custom yuck types to the array.
+            YuckType parentType = YuckTypesProvider.YuckTypes.Concat((_workspace as EwwWorkspace).UserDefinedTypes)?.Where(type => type.name == parentNode)?.FirstOrDefault();
             if (parentType == null) return default;
 
             return new PropertyYuckCompletionContext() { parentType = parentType };
@@ -89,12 +81,12 @@ internal class SExpression
             string parentNode = GetParentNode();
             string parentPropertyNode = GetParentProperty();
             if (parentPropertyNode == null || parentNode == null) return default;
-            
-            YuckType parentType = YuckTypesProvider.YuckTypes?.Where(type => type.name == parentNode)?.First();
-            YuckProperty parentProperty = parentType.properties.Where(type => type.name == parentPropertyNode)?.First();
 
-            if(parentType is null || parentProperty is null) return default; 
-            return new PropertySuggestionCompletionContext() { parentType = parentType, parentProperty = parentProperty};
+            YuckType parentType = YuckTypesProvider.YuckTypes?.Where(type => type.name == parentNode)?.FirstOrDefault();
+            YuckProperty parentProperty = parentType.properties.Where(type => type.name == parentPropertyNode)?.FirstOrDefault();
+
+            if (parentType is null || parentProperty is null) return default;
+            return new PropertySuggestionCompletionContext() { parentType = parentType, parentProperty = parentProperty };
         }
 
 
@@ -203,6 +195,20 @@ internal class SExpression
         return textCopy;
     }
 
+    private string RemoveComments(string input)
+    {
+        //should probably use regex for this 
+        string[] lines = input.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+        for (int i = 0; i < lines.Length; i++)
+        {
+            int semicolonIndex = lines[i].IndexOf(';');
+            if (semicolonIndex >= 0)
+            {
+                lines[i] = lines[i].Substring(0, semicolonIndex);
+            }
+        }
+        return string.Join(Environment.NewLine, lines);
+    }
     ///<summary>
     ///Pretty much just do some simple string parsing to get the property on which the completion request was invoked on. e.g (box :height , height would be the property.
     private string GetParentProperty()
@@ -210,8 +216,74 @@ internal class SExpression
         //select last line 
         string lastLine = _completionText.Split(Environment.NewLine).Last();
         string lastNode = lastLine.Split(" ").Last().Trim();
-       
-        if(lastNode[0] == ':' && lastNode.Length > 0) return lastNode[1..].Trim();
+
+        if ( lastNode is not null && lastNode.Length > 0 && lastNode[0] == ':') return lastNode[1..].Trim();
         return null;
+    }
+
+    internal protected List<YuckType> GetVariables()
+    {
+        //remove comments and strings from text 
+        List<YuckType> customYuckTypes = new();
+        var text = RemoveAllQuotedChars(_text);
+        text = RemoveComments(_text);
+        //string varDefPatterns = @"\((deflisten|defpoll|defvar|defwidget)[^)]*\)";
+        string varDefPatterns = @"\((defwidget)[^)]*\)";
+        var matches = Regex.Matches(text, varDefPatterns);
+
+        //go through matches
+        foreach (var match in matches.ToArray())
+        {
+            var varDef = match.Value;
+            var varType = varDef.Split(" ")[0].Trim(); //could be (deflisten, (defpoll , (defvar , e.t.c
+            //only considering widgets for now
+            if (varType != "(defwidget") continue;
+
+            var varDefSplit = varDef.Split(" ");
+
+            string widgetName = null;
+            List<YuckProperty> widgetProperties = new();
+            //widgetname would just be the first text 
+            foreach (string prop in varDefSplit)
+            {
+                //_logger.LogError(prop);
+                //we are looking to the first lone text. Strings have already been deleted.
+                if (prop.Length < 1 || prop.Trim()[0] == '[' || prop.Trim()[0] == '(' || prop == null) continue;
+
+                widgetName = prop.Split("[")[0];
+                //break because we only need one match
+                break;
+            }
+            //now to find widget properties. I could probably do this in the loop above but i dont want to confuse myself
+            var indexOfPropertiesOpener = varDef.IndexOf("[");
+            var indexOfPropertiesCloser = varDef.IndexOf("]");
+            if (indexOfPropertiesOpener == -1 || indexOfPropertiesCloser == -1) continue; //invalid syntax, continue to next match
+            string propertiesSplice = varDef.Substring(indexOfPropertiesOpener + 1, indexOfPropertiesCloser - indexOfPropertiesOpener - 1);
+
+            if(propertiesSplice.Trim().Length == 0) widgetProperties = new(); //no properties defined , 
+            
+            foreach(var prop in propertiesSplice.Split(" ")){
+                var property = prop.Trim();
+                widgetProperties.Add(new(){
+                        name = property,
+                        description = $"Custom property for {widgetName}",
+                        dataType = YuckDataType.YuckString
+                    });
+            }
+            customYuckTypes.Add(new()
+            {
+                //split prop from [ incase user didn't space proeprties from widget name 
+                name = widgetName,
+                description = "A custom yuck type",
+                properties = widgetProperties.ToArray(),
+                IsUserDefined = true
+            });
+
+        }
+        return customYuckTypes;
+    }
+    internal protected void GetIncludes()
+    {
+
     }
 }

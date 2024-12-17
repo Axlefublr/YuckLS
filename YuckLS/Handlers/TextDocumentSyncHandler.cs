@@ -6,17 +6,18 @@ internal sealed class TextDocumentSyncHandler(
         ILogger<TextDocumentSyncHandler> _logger,
         ILanguageServerConfiguration _configuration,
         IBufferService _bufferService,
-        TextDocumentSelector _textDocumentSelector
+        TextDocumentSelector _textDocumentSelector,
+        IEwwWorkspace _ewwWorkspace
         ) : TextDocumentSyncHandlerBase
 {
-        public override TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri)
+    public override TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri)
     {
         return new TextDocumentAttributes(uri, uri.Scheme!, "yuck");
     }
 
     public override async Task<Unit> Handle(DidOpenTextDocumentParams request, CancellationToken cancellationToken)
     {
-        _logger.LogTrace("FIle was opened");
+        _ewwWorkspace.LoadWorkspace();
         var conf = await _configuration.GetScopedConfiguration(request.TextDocument.Uri, cancellationToken);
         _bufferService.Add(request.TextDocument.Uri, request.TextDocument.Text);
         return Unit.Value;
@@ -31,10 +32,11 @@ internal sealed class TextDocumentSyncHandler(
         {
             if (change.Range != null)
             {
-                _bufferService.ApplyIncrementalChange(request.TextDocument.Uri,change.Range,change.Text);
+                _bufferService.ApplyIncrementalChange(request.TextDocument.Uri, change.Range, change.Text);
             }
-            else{
-                _bufferService.ApplyFullChange(request.TextDocument.Uri,change.Text);
+            else
+            {
+                _bufferService.ApplyFullChange(request.TextDocument.Uri, change.Text);
             }
         }
         return Task.FromResult(Unit.Value);

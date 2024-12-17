@@ -1,15 +1,4 @@
-﻿global using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
-global using OmniSharp.Extensions.LanguageServer.Protocol.Document;
-global using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-global using OmniSharp.Extensions.LanguageServer.Protocol.Server;
-global using Microsoft.Extensions.Logging;
-global using Microsoft.Extensions.DependencyInjection;
-global using OmniSharp.Extensions.LanguageServer.Server;
-global using Serilog;
-global using OmniSharp.Extensions.LanguageServer.Protocol;
-global using MediatR;
-global using System.Linq;
-global using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
+﻿
 using YuckLS.Handlers;
 using YuckLS.Services;
 namespace YuckLS;
@@ -34,6 +23,7 @@ public class Program
                         .AddSingleton(GetServer)
                         .AddSingleton(new TextDocumentSelector(new TextDocumentFilter { Pattern = "**/*.yuck"}))
                         .AddSingleton<IBufferService,BufferService>()
+                        .AddSingleton<IEwwWorkspace,EwwWorkspace>()
                         )
                     );
         await server.WaitForExit;
@@ -59,5 +49,6 @@ public class Program
         }
     }
     private static ILanguageServer GetServer() => server;
-    
+
+ 
 }

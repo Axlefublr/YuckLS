@@ -1,12 +1,12 @@
 namespace YuckLS.Core.Models;
-
+using YuckLS.Services;
 //really wish i had rust enums right about now
-public abstract class YuckCompletionContext
+internal abstract class YuckCompletionContext
 {
     protected List<CompletionItem> _items = new();
     public abstract CompletionList Completions();
 }
-public class TopLevelYuckCompletionContext : YuckCompletionContext
+internal class TopLevelYuckCompletionContext : YuckCompletionContext
 {
     public override CompletionList Completions()
     {
@@ -23,11 +23,13 @@ public class TopLevelYuckCompletionContext : YuckCompletionContext
         return new CompletionList(_items);
     }
 }
-public class WidgetYuckCompletionContext : YuckCompletionContext
+internal class WidgetYuckCompletionContext(IEwwWorkspace _workspace) : YuckCompletionContext
 {
     public override CompletionList Completions()
     {
-        foreach (var yuckType in YuckTypesProvider.YuckTypes.Where(p => p.IsGtkWidgetType == true))
+        var workspace = _workspace as EwwWorkspace;
+        //get gtk types and user defined types
+        foreach (var yuckType in YuckTypesProvider.YuckTypes.Where(p => p.IsGtkWidgetType == true).Concat(workspace.UserDefinedTypes))
         {
             _items.Add(new()
             {
@@ -40,7 +42,7 @@ public class WidgetYuckCompletionContext : YuckCompletionContext
         return new CompletionList(_items);
     }
 }
-public class PropertyYuckCompletionContext : YuckCompletionContext
+internal class PropertyYuckCompletionContext : YuckCompletionContext
 {
     public required YuckType parentType;
 
@@ -61,7 +63,7 @@ public class PropertyYuckCompletionContext : YuckCompletionContext
         return new CompletionList(_items);
     }
 }
-public class PropertySuggestionCompletionContext : YuckCompletionContext
+internal class PropertySuggestionCompletionContext : YuckCompletionContext
 {
     public required YuckType parentType;
     public required YuckProperty parentProperty;
@@ -91,6 +93,7 @@ public class YuckType
     public bool IsTopLevel = false;
     public bool AreWidgetsEmbeddable = false;
     public bool IsGtkWidgetType = false;
+    public bool IsUserDefined = false;
 }
 
 public class YuckProperty
