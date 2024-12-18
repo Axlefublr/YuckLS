@@ -27,17 +27,17 @@ internal sealed class CompletionHandler(
         };
         return Task.FromResult(ci);
     }
-    public override async Task<CompletionList> Handle(CompletionParams request, CancellationToken cancellationToken)
+    public override  Task<CompletionList> Handle(CompletionParams request, CancellationToken cancellationToken)
     {
-        string text = _bufferService.GetTextTillPosition(request.TextDocument.Uri, request.Position);
+        string? text = _bufferService.GetTextTillPosition(request.TextDocument.Uri, request.Position);
         if (text is null)
-            return new CompletionList();
+            return Task.FromResult(new CompletionList());
 
         YuckCompleter yuckCompleter = new YuckCompleter(text, _logger, _workspace);
         var completions = yuckCompleter.GetCompletions();
         if (completions is null || completions.Count() == 0)
-            return new CompletionList();
-        return completions;
+            return Task.FromResult(new CompletionList());
+        return Task.FromResult(completions);
     }
 
     protected override CompletionRegistrationOptions CreateRegistrationOptions(CompletionCapability capability, ClientCapabilities clientCapabilities)

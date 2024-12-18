@@ -4,19 +4,23 @@ using YuckLS.Core.Models;
 using YuckLS.Core;
 public interface IEwwWorkspace
 {
+    public YuckType[] UserDefinedTypes {get;}
     public void LoadWorkspace();
 }
 internal sealed class EwwWorkspace(ILogger<EwwWorkspace> _logger, ILoggerFactory _loggerFactory, IServiceProvider _serviceProvider) : IEwwWorkspace
 {
     //store include paths and whether they have been visited 
     private System.Collections.Concurrent.ConcurrentDictionary<string, bool> _includePaths = new();
-    public YuckType[] UserDefinedTypes = new YuckType[] { };
-    private string _ewwRoot;
+    public YuckType[] _userDefinedTypes = new YuckType[] { };
+    private string? _ewwRoot = null;
+
+    YuckType[] IEwwWorkspace.UserDefinedTypes => _userDefinedTypes ;
+
     public void LoadWorkspace()
     {
         _logger.LogError("Loading workspace");
         //empty user types and include paths
-        UserDefinedTypes = new YuckType[] {};
+        _userDefinedTypes = new YuckType[] {};
         _includePaths = new();
         var current_path = Directory.GetCurrentDirectory();
 
@@ -41,9 +45,9 @@ internal sealed class EwwWorkspace(ILogger<EwwWorkspace> _logger, ILoggerFactory
         while (_includePaths.Where(p => p.Value == false).Count() > 0)
         {
             LoadVariables(_includePaths.Where(p => p.Value == false).First().Key);
-        }
+        } 
     }
-    internal protected void LoadVariables(string filepath)
+    internal void LoadVariables(string filepath)
     {
         if (!File.Exists(filepath))
         {
@@ -61,11 +65,13 @@ internal sealed class EwwWorkspace(ILogger<EwwWorkspace> _logger, ILoggerFactory
         var _ewwWorkspace = _serviceProvider.GetRequiredService<IEwwWorkspace>();
         var sExpression = new SExpression(ewwRootBuffer, _completionHandlerLogger, _ewwWorkspace);
         var customVariables = sExpression.GetVariables();
-        UserDefinedTypes = UserDefinedTypes.Concat(customVariables.ToArray()).ToArray();
+        _userDefinedTypes = _userDefinedTypes.Concat(customVariables.ToArray()).ToArray();
         List<string> includePaths = sExpression.GetIncludes();
         foreach (string include in includePaths)
         {
-            string parentDir = Directory.GetParent(_ewwRoot).FullName;
+            if(_ewwRoot is null) continue;
+            string? parentDir = Directory.GetParent(_ewwRoot)?.FullName;
+            if(parentDir is null) continue;
             string includePath = Path.Combine(parentDir, include);
             _includePaths.TryAdd(includePath, false);
         }

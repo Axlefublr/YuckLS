@@ -36,17 +36,17 @@ internal class SExpression
     ///1.) Open S-Expression like so : '(', should complete with valid widget types like Box, Window, Expression Types like defpoll, defvar ,e.t.c
     ///2.) Creating properties like so: ':' should complete with valid properties of a containing S-Expression tag e.g (defwindow  :) should autocomplete with properties like :monitor :stacking e.t.c or propertied of the monitor widget 
     ///</summary>
-    public YuckCompletionContext TryGetCompletionContext()
+    public YuckCompletionContext? TryGetCompletionContext()
     {
         if (_text.Last() == _openTag)
         {
             //if user's cursor is about to create a top level tag 
             if (IsTopLevel()) return new TopLevelYuckCompletionContext();
             //a parent node must exist if the cursor is not top level
-            string parentNode = GetParentNode();
+            string? parentNode = GetParentNode();
             //lookup the parentNode in yuck types
-            YuckType parentType = null;
-            foreach (var yuckType in YuckTypesProvider.YuckTypes.Concat((_workspace as EwwWorkspace).UserDefinedTypes))
+            YuckType? parentType = null;
+            foreach (var yuckType in YuckTypesProvider.YuckTypes.Concat(_workspace.UserDefinedTypes))
             {
                 if (yuckType.name == parentNode)
                 {
@@ -63,11 +63,11 @@ internal class SExpression
         else if (_text.Last() == _OpenProperties)
         {
             //try to get the parentNode 
-            string parentNode = GetParentNode();
+            string? parentNode = GetParentNode();
             if (parentNode == null) return default;
 
             //try to parse the parentNode to a yuck type. Add custom yuck types to the array.
-            YuckType parentType = YuckTypesProvider.YuckTypes.Concat((_workspace as EwwWorkspace).UserDefinedTypes)?.Where(type => type.name == parentNode)?.FirstOrDefault();
+            YuckType? parentType = YuckTypesProvider.YuckTypes.Concat(_workspace.UserDefinedTypes)?.Where(type => type.name == parentNode)?.FirstOrDefault();
             if (parentType == null) return default;
 
             return new PropertyYuckCompletionContext() { parentType = parentType };
@@ -76,12 +76,13 @@ internal class SExpression
 
         else if (_text.Last() == _openCompleterForProperties)
         {
-            string parentNode = GetParentNode();
-            string parentPropertyNode = GetParentProperty();
+            string? parentNode = GetParentNode();
+            string? parentPropertyNode = GetParentProperty();
             if (parentPropertyNode == null || parentNode == null) return default;
 
-            YuckType parentType = YuckTypesProvider.YuckTypes?.Where(type => type?.name == parentNode)?.FirstOrDefault();
-            YuckProperty parentProperty = parentType.properties.Where(type => type?.name == parentPropertyNode)?.FirstOrDefault();
+            YuckType? parentType = YuckTypesProvider.YuckTypes?.Where(type => type?.name == parentNode)?.FirstOrDefault();
+            if(parentType is null) return default;
+            YuckProperty? parentProperty = parentType?.properties?.Where(type => type?.name == parentPropertyNode)?.FirstOrDefault();
 
             if (parentType is null || parentProperty is null) return default;
             return new PropertySuggestionCompletionContext() { parentType = parentType, parentProperty = parentProperty };
@@ -117,7 +118,7 @@ internal class SExpression
     ///<summary>
     ///Gets the parent node for the cursor's position. E.g (box , the parent node is box
     ///</summary>
-    internal protected string GetParentNode()
+    internal protected string? GetParentNode()
     {
         //i could not figure out how to do this in one command
         //recursively delete any tags that are closed even on multilines
@@ -129,7 +130,7 @@ internal class SExpression
             matchCount = Regex.Matches(_cleanedText, patternForClosedNodes, RegexOptions.IgnoreCase).Count;
             _cleanedText = Regex.Replace(_cleanedText, patternForClosedNodes, "", RegexOptions.IgnoreCase);
         } while (matchCount > 0);
-        var matches = Regex.Matches(_cleanedText, @"\(\w+", RegexOptions.IgnoreCase);
+        var matches = Regex.Matches(_cleanedText, @"\([a-zA-Z0-9-_]+", RegexOptions.IgnoreCase);
         if (matches.Count > 0)
         {
             //trim line breaks and remove properties from node
@@ -209,7 +210,7 @@ internal class SExpression
     }
     ///<summary>
     ///Pretty much just do some simple string parsing to get the property on which the completion request was invoked on. e.g (box :height , height would be the property.
-    private string GetParentProperty()
+    private string? GetParentProperty()
     {
         //select last line 
         string lastLine = _completionText.Split(Environment.NewLine).Last();
@@ -239,7 +240,7 @@ internal class SExpression
 
             var varDefSplit = varDef.Split(" ");
 
-            string widgetName = null;
+            string? widgetName = null;
             List<YuckProperty> widgetProperties = new();
             //widgetname would just be the first text 
             foreach (string prop in varDefSplit)
@@ -252,6 +253,7 @@ internal class SExpression
                 //break because we only need one match
                 break;
             }
+            if(widgetName is null) continue;
             //now to find widget properties. I could probably do this in the loop above but i dont want to confuse myself
             var indexOfPropertiesOpener = varDef.IndexOf("[");
             var indexOfPropertiesCloser = varDef.IndexOf("]");

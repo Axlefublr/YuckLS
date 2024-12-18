@@ -27,7 +27,7 @@ internal class WidgetYuckCompletionContext(IEwwWorkspace _workspace) : YuckCompl
 {
     public override CompletionList Completions()
     {
-        var workspace = _workspace as EwwWorkspace;
+        var workspace = _workspace;
         //get gtk types and user defined types
         foreach (var yuckType in YuckTypesProvider.YuckTypes.Where(p => p.IsGtkWidgetType == true).Concat(workspace.UserDefinedTypes))
         {

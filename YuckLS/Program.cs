@@ -4,7 +4,7 @@ using YuckLS.Services;
 namespace YuckLS;
 public class Program
 {
-    static ILanguageServer server;
+    static ILanguageServer? server;
     public async static Task Main(string[] args)
     {
         InitLogging();
@@ -48,7 +48,7 @@ public class Program
             .CreateLogger();
         }
     }
-    private static ILanguageServer GetServer() => server;
+    private static ILanguageServer? GetServer() => server;
 
  
 }
