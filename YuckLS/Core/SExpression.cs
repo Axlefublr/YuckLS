@@ -80,8 +80,8 @@ internal class SExpression
             string parentPropertyNode = GetParentProperty();
             if (parentPropertyNode == null || parentNode == null) return default;
 
-            YuckType parentType = YuckTypesProvider.YuckTypes?.Where(type => type.name == parentNode)?.FirstOrDefault();
-            YuckProperty parentProperty = parentType.properties.Where(type => type.name == parentPropertyNode)?.FirstOrDefault();
+            YuckType parentType = YuckTypesProvider.YuckTypes?.Where(type => type?.name == parentNode)?.FirstOrDefault();
+            YuckProperty parentProperty = parentType.properties.Where(type => type?.name == parentPropertyNode)?.FirstOrDefault();
 
             if (parentType is null || parentProperty is null) return default;
             return new PropertySuggestionCompletionContext() { parentType = parentType, parentProperty = parentProperty };

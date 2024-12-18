@@ -14,7 +14,10 @@ internal sealed class EwwWorkspace(ILogger<EwwWorkspace> _logger, ILoggerFactory
     private string _ewwRoot;
     public void LoadWorkspace()
     {
-        //current directory where the LSP client started the executable
+        _logger.LogError("Loading workspace");
+        //empty user types and include paths
+        UserDefinedTypes = new YuckType[] {};
+        _includePaths = new();
         var current_path = Directory.GetCurrentDirectory();
 
         //recursively traverse upwards until we find an eww.yuck file.
@@ -39,7 +42,6 @@ internal sealed class EwwWorkspace(ILogger<EwwWorkspace> _logger, ILoggerFactory
         {
             LoadVariables(_includePaths.Where(p => p.Value == false).First().Key);
         }
-
     }
     internal protected void LoadVariables(string filepath)
     {

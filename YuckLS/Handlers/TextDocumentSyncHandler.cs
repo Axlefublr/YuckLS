@@ -25,9 +25,6 @@ internal sealed class TextDocumentSyncHandler(
 
     public override Task<Unit> Handle(DidChangeTextDocumentParams request, CancellationToken cancellationToken)
     {
-        //document changed 
-        _logger.LogTrace($"You've changed this yuck document at {request.ContentChanges.First()}");
-        //log content after change
         foreach (var change in request.ContentChanges)
         {
             if (change.Range != null)
@@ -44,6 +41,8 @@ internal sealed class TextDocumentSyncHandler(
 
     public override Task<Unit> Handle(DidSaveTextDocumentParams request, CancellationToken cancellationToken)
     {
+        //reload workspace when buffer is saved , i'm not sure that this is the most ideal way to do this 
+        _ewwWorkspace.LoadWorkspace();
         _logger.LogTrace($"did save file {request.TextDocument.Uri}");
         return Task.FromResult(Unit.Value);
     }
