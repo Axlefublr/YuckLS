@@ -37,7 +37,6 @@ internal sealed class CompletionHandler(
         var completions = yuckCompleter.GetCompletions();
         if (completions is null || completions.Count() == 0)
             return new CompletionList();
-        _logger.LogError($"SIZE OF COMPLETIONS IS {completions.Count()}");
         return completions;
     }
 

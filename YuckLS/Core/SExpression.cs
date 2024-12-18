@@ -7,23 +7,20 @@ namespace YuckLS.Core;
 internal class SExpression
 {
     private readonly string _text;
-    //text used for parsing completion.
     private readonly string _completionText;
     private readonly ILogger<YuckLS.Handlers.CompletionHandler> _logger;
     private IEwwWorkspace _workspace;
-    public SExpression(string _text, ILogger<YuckLS.Handlers.CompletionHandler> _logger, IEwwWorkspace _workspace  )
+    public SExpression(string _text, ILogger<YuckLS.Handlers.CompletionHandler> _logger, IEwwWorkspace _workspace)
     {
-        //removed trimming because we need white space to also trigger completion
-        //        this._text = _text.Trim();
         this._text = _text;
         this._logger = _logger;
         _completionText = this._text;
-        //recursively delete char in quotes to prevent interferance
 
+        //recursively delete char in quotes to prevent interferance
         _completionText = RemoveAllQuotedChars(_completionText);
         //delete comments from text to prevent interferance, this must be done after characters in quotes have been removed or completer might break and pop last char from text(the completion trigger)
         _completionText = RemoveComments(_completionText)[..^1];
-        
+
         this._workspace = _workspace;
     }
 
@@ -48,7 +45,7 @@ internal class SExpression
             string parentNode = GetParentNode();
             //lookup the parentNode in yuck types
             YuckType parentType = null;
-            foreach (var yuckType in YuckTypesProvider.YuckTypes)
+            foreach (var yuckType in YuckTypesProvider.YuckTypes.Concat((_workspace as EwwWorkspace).UserDefinedTypes))
             {
                 if (yuckType.name == parentNode)
                 {
@@ -217,7 +214,7 @@ internal class SExpression
         string lastLine = _completionText.Split(Environment.NewLine).Last();
         string lastNode = lastLine.Split(" ").Last().Trim();
 
-        if ( lastNode is not null && lastNode.Length > 0 && lastNode[0] == ':') return lastNode[1..].Trim();
+        if (lastNode is not null && lastNode.Length > 0 && lastNode[0] == ':') return lastNode[1..].Trim();
         return null;
     }
 
@@ -260,15 +257,17 @@ internal class SExpression
             if (indexOfPropertiesOpener == -1 || indexOfPropertiesCloser == -1) continue; //invalid syntax, continue to next match
             string propertiesSplice = varDef.Substring(indexOfPropertiesOpener + 1, indexOfPropertiesCloser - indexOfPropertiesOpener - 1);
 
-            if(propertiesSplice.Trim().Length == 0) widgetProperties = new(); //no properties defined , 
-            
-            foreach(var prop in propertiesSplice.Split(" ")){
+            if (propertiesSplice.Trim().Length == 0) widgetProperties = new(); //no properties defined , 
+            foreach (var prop in propertiesSplice.Split(" "))
+            {
                 var property = prop.Trim();
-                widgetProperties.Add(new(){
-                        name = property,
-                        description = $"Custom property for {widgetName}",
-                        dataType = YuckDataType.YuckString
-                    });
+                if(property[0] == '?') property = property.Substring(1);
+                widgetProperties.Add(new()
+                {
+                    name = property,
+                    description = $"Custom property for {widgetName}",
+                    dataType = YuckDataType.YuckString,
+                });
             }
             customYuckTypes.Add(new()
             {
@@ -276,14 +275,31 @@ internal class SExpression
                 name = widgetName,
                 description = "A custom yuck type",
                 properties = widgetProperties.ToArray(),
-                IsUserDefined = true
+                IsUserDefined = true,
+                AreWidgetsEmbeddable = true
             });
 
         }
         return customYuckTypes;
     }
-    internal protected void GetIncludes()
+    internal protected List<string> GetIncludes()
     {
+        List<string> results = new();
+        string includePatterns = @"\((include)[^)]*\)";
+        var text = RemoveComments(_text);
+        var matches = Regex.Matches(text, includePatterns);
+        if (matches.Count() == 0) return results;
+        foreach (var match in matches.ToArray())
+        {
+            //this will break very easily 
+            var indexOfQuoteOpener = match.Value.IndexOf("\"");
+            var indexOfQuoteCloser = match.Value.IndexOf("\"", indexOfQuoteOpener + 1);
 
+            if (indexOfQuoteOpener == -1 || indexOfQuoteCloser == -1) continue;
+            string pathSlice = match.Value.Substring(indexOfQuoteOpener + 1, indexOfQuoteCloser - indexOfQuoteOpener - 1);
+
+            results.Add(pathSlice);
+        }
+        return results;
     }
 }

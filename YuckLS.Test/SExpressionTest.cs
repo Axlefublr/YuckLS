@@ -128,15 +128,16 @@ public class SExpressionTest
     public void IsTopLevelTest()
     {
         var CompletionHandlerLoggerMock = new Mock<Microsoft.Extensions.Logging.ILogger<YuckLS.Handlers.CompletionHandler>>();
-        var test1 = new SExpression(_isTopLevelTestCases[0], CompletionHandlerLoggerMock.Object).IsTopLevel();
-        var test2 = new SExpression(_isTopLevelTestCases[1], CompletionHandlerLoggerMock.Object).IsTopLevel();
-        var test3 = new SExpression(_isTopLevelTestCases[2], CompletionHandlerLoggerMock.Object).IsTopLevel();
-        var test4 = new SExpression(_isTopLevelTestCases[3], CompletionHandlerLoggerMock.Object).IsTopLevel();
-        var test5 = new SExpression(_isTopLevelTestCases[4], CompletionHandlerLoggerMock.Object).IsTopLevel();
-        var test6 = new SExpression(_isTopLevelTestCases[5], CompletionHandlerLoggerMock.Object).IsTopLevel();
-        var test7 = new SExpression(_isTopLevelTestCases[6], CompletionHandlerLoggerMock.Object).IsTopLevel();
-        var test8 = new SExpression(_isTopLevelTestCases[7], CompletionHandlerLoggerMock.Object).IsTopLevel();
-        var test9 = new SExpression(_isTopLevelTestCases[8], CompletionHandlerLoggerMock.Object).IsTopLevel();
+        var ewwWorkspaceMock = new Mock<YuckLS.Services.IEwwWorkspace>();
+        var test1 = new SExpression(_isTopLevelTestCases[0], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).IsTopLevel();
+        var test2 = new SExpression(_isTopLevelTestCases[1], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).IsTopLevel();
+        var test3 = new SExpression(_isTopLevelTestCases[2], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).IsTopLevel();
+        var test4 = new SExpression(_isTopLevelTestCases[3], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).IsTopLevel();
+        var test5 = new SExpression(_isTopLevelTestCases[4], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).IsTopLevel();
+        var test6 = new SExpression(_isTopLevelTestCases[5], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).IsTopLevel();
+        var test7 = new SExpression(_isTopLevelTestCases[6], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).IsTopLevel();
+        var test8 = new SExpression(_isTopLevelTestCases[7], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).IsTopLevel();
+        var test9 = new SExpression(_isTopLevelTestCases[8], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).IsTopLevel();
         Assert.False(test1);
         Assert.True(test2);
         Assert.False(test3);
@@ -153,13 +154,14 @@ public class SExpressionTest
     {
         //\(\w+[^\(]*\)
         var CompletionHandlerLoggerMock = new Mock<Microsoft.Extensions.Logging.ILogger<YuckLS.Handlers.CompletionHandler>>();
-        var test1 = new SExpression(_getParentNodeTestCases[0], CompletionHandlerLoggerMock.Object).GetParentNode();
-        var test2 = new SExpression(_getParentNodeTestCases[1], CompletionHandlerLoggerMock.Object).GetParentNode();
-        var test3 = new SExpression(_getParentNodeTestCases[2], CompletionHandlerLoggerMock.Object).GetParentNode();
-        var test4 = new SExpression(_getParentNodeTestCases[3], CompletionHandlerLoggerMock.Object).GetParentNode();
-        var test5 = new SExpression(_getParentNodeTestCases[4], CompletionHandlerLoggerMock.Object).GetParentNode();
-        var test6 = new SExpression(_getParentNodeTestCases[5], CompletionHandlerLoggerMock.Object).GetParentNode();
-        var test7 = new SExpression(_getParentNodeTestCases[6], CompletionHandlerLoggerMock.Object).GetParentNode();
+        var ewwWorkspaceMock = new Mock<YuckLS.Services.IEwwWorkspace>();
+        var test1 = new SExpression(_getParentNodeTestCases[0], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).GetParentNode();
+        var test2 = new SExpression(_getParentNodeTestCases[1], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).GetParentNode();
+        var test3 = new SExpression(_getParentNodeTestCases[2], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).GetParentNode();
+        var test4 = new SExpression(_getParentNodeTestCases[3], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).GetParentNode();
+        var test5 = new SExpression(_getParentNodeTestCases[4], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).GetParentNode();
+        var test6 = new SExpression(_getParentNodeTestCases[5], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).GetParentNode();
+        var test7 = new SExpression(_getParentNodeTestCases[6], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).GetParentNode();
         Assert.Equal(test1, "box");
         Assert.Equal(test2, "defvar");
         Assert.Equal(test3, "defwidget");
