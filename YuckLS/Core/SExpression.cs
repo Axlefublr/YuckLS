@@ -19,8 +19,10 @@ internal class SExpression
         //recursively delete char in quotes to prevent interferance
         _completionText = RemoveAllQuotedChars(_completionText);
         //delete comments from text to prevent interferance, this must be done after characters in quotes have been removed or completer might break and pop last char from text(the completion trigger)
-        _completionText = RemoveComments(_completionText)[..^1];
-
+        if (_completionText.Length > 0)
+        {
+            _completionText = RemoveComments(_completionText)[..^1];
+        }
         this._workspace = _workspace;
     }
 
@@ -36,7 +38,6 @@ internal class SExpression
     ///</summary>
     public YuckCompletionContext TryGetCompletionContext()
     {
-        _logger.LogError($"Triggering completer for  {_text.Last()}");
         if (_text.Last() == _openTag)
         {
             //if user's cursor is about to create a top level tag 
@@ -261,7 +262,8 @@ internal class SExpression
             foreach (var prop in propertiesSplice.Split(" "))
             {
                 var property = prop.Trim();
-                if(property[0] == '?') property = property.Substring(1);
+                if (property == null || property.Length < 1) continue;
+                if (property[0] == '?') property = property.Substring(1);
                 widgetProperties.Add(new()
                 {
                     name = property,
