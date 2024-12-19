@@ -1024,7 +1024,7 @@ public static class YuckTypesProvider
               dataType = YuckDataType.YuckBool
           },
           new() {
-            name = "size of icons in the tray",
+            name = "size",
               description = "size of icons in the tray",
               dataType = YuckDataType.YuckInt,
           },
@@ -1033,7 +1033,7 @@ public static class YuckTypesProvider
               description = "prepend new icons",
               dataType = YuckDataType.YuckBool
           }
-        }
+        }.Concat(_commonGtkWidgetProperties).ToArray()
     },
 
     //special types 

@@ -11,7 +11,7 @@ internal sealed class EwwWorkspace(ILogger<EwwWorkspace> _logger, ILoggerFactory
 {
     //store include paths and whether they have been visited 
     private System.Collections.Concurrent.ConcurrentDictionary<string, bool> _includePaths = new();
-    public YuckType[] _userDefinedTypes = new YuckType[] { };
+    private YuckType[] _userDefinedTypes = new YuckType[] { };
     private string? _ewwRoot = null;
 
     YuckType[] IEwwWorkspace.UserDefinedTypes => _userDefinedTypes ;
@@ -45,7 +45,16 @@ internal sealed class EwwWorkspace(ILogger<EwwWorkspace> _logger, ILoggerFactory
         while (_includePaths.Where(p => p.Value == false).Count() > 0)
         {
             LoadVariables(_includePaths.Where(p => p.Value == false).First().Key);
-        } 
+        }
+
+        foreach(var yucktype in _userDefinedTypes){
+            if(yucktype.name == "circular-symbol-icon"){
+                foreach (var prop in yucktype.properties)
+                {
+                    _logger.LogError(prop.name);
+                }
+            }
+        }
     }
     internal void LoadVariables(string filepath)
     {

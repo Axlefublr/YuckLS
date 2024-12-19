@@ -226,8 +226,8 @@ internal class SExpression
         List<YuckType> customYuckTypes = new();
         var text = RemoveAllQuotedChars(_text);
         text = RemoveComments(_text);
-        //string varDefPatterns = @"\((deflisten|defpoll|defvar|defwidget)[^)]*\)";
-        string varDefPatterns = @"\((defwidget)[^)]*\)";
+        string varDefPatterns = @"\((deflisten|defpoll|defvar|defwidget)[^)]*\)";
+        //string varDefPatterns = @"\((defwidget)[^)]*\)";
         var matches = Regex.Matches(text, varDefPatterns);
 
         //go through matches
