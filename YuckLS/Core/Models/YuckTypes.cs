@@ -470,7 +470,8 @@ public static class YuckTypesProvider
           new() {
             name = "orientation",
               description = "orientation of the widget. Possible values: 'vertical', 'v', 'horizontal', 'h'",
-              dataType = YuckDataType.YuckString
+              dataType = YuckDataType.YuckString,
+              possibleValues = new[] {"vertical","horizontal"}
           }
         }.Concat(_commonGtkWidgetProperties).Concat(_timeOutProperty).ToArray()
     },

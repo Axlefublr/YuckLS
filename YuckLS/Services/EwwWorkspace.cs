@@ -47,14 +47,7 @@ internal sealed class EwwWorkspace(ILogger<EwwWorkspace> _logger, ILoggerFactory
             LoadVariables(_includePaths.Where(p => p.Value == false).First().Key);
         }
 
-        foreach(var yucktype in _userDefinedTypes){
-            if(yucktype.name == "circular-symbol-icon"){
-                foreach (var prop in yucktype.properties)
-                {
-                    _logger.LogError(prop.name);
-                }
-            }
-        }
+        
     }
     internal void LoadVariables(string filepath)
     {
