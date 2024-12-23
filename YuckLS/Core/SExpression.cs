@@ -81,11 +81,11 @@ internal class SExpression
             if (parentPropertyNode == null || parentNode == null) return default;
 
             YuckType? parentType = YuckTypesProvider.YuckTypes?.Where(type => type?.name == parentNode)?.FirstOrDefault();
-            if(parentType is null) return default;
+            if (parentType is null) return default;
             YuckProperty? parentProperty = parentType?.properties?.Where(type => type?.name == parentPropertyNode)?.FirstOrDefault();
 
             if (parentType is null || parentProperty is null) return default;
-            return new PropertySuggestionCompletionContext() { parentType = parentType, parentProperty = parentProperty };
+            return new PropertySuggestionCompletionContext(_workspace) { parentType = parentType, parentProperty = parentProperty };
         }
 
 
@@ -220,10 +220,11 @@ internal class SExpression
         return null;
     }
 
-    internal protected List<YuckType> GetVariables()
+    internal protected (List<YuckType> customWidgets , List<YuckVariable> customVariables) GetVariables()
     {
         //remove comments and strings from text 
         List<YuckType> customYuckTypes = new();
+        List<YuckVariable> customVariables = new();
         var text = RemoveAllQuotedChars(_text);
         text = RemoveComments(_text);
         string varDefPatterns = @"\((deflisten|defpoll|defvar|defwidget)[^)]*\)";
@@ -235,12 +236,9 @@ internal class SExpression
         {
             var varDef = match.Value;
             var varType = varDef.Split(" ")[0].Trim(); //could be (deflisten, (defpoll , (defvar , e.t.c
-            //only considering widgets for now
-            if (varType != "(defwidget") continue;
-
+            // if (varType != "(defwidget") continue;
             var varDefSplit = varDef.Split(" ");
-
-            string? widgetName = null;
+            string? typeName = null;
             List<YuckProperty> widgetProperties = new();
             //widgetname would just be the first text 
             foreach (string prop in varDefSplit)
@@ -249,11 +247,35 @@ internal class SExpression
                 //we are looking to the first lone text. Strings have already been deleted.
                 if (prop.Length < 1 || prop.Trim()[0] == '[' || prop.Trim()[0] == '(' || prop == null) continue;
 
-                widgetName = prop.Split("[")[0];
+                typeName = prop.Split("[")[0];
                 //break because we only need one match
                 break;
             }
-            if(widgetName is null) continue;
+            if (typeName is null) continue;
+            //if the type is not a widget defination we just stop here and return it.
+            if (varType != "(defwidget")
+            {
+                string variableType = "";
+                switch (varType)
+                {
+                    case "(deflisten":
+                        variableType = "Listener";
+                        break;
+                    case "(defpoll":
+                        variableType = "Poll";
+                        break;
+                    case "(defvar":
+                        variableType = "Variable";
+                        break;
+                    default: break;
+                }
+                customVariables.Add(new()
+                {
+                    name = typeName,
+                    description = $"A custom ${variableType}"
+                });
+                continue;
+            }
             //now to find widget properties. I could probably do this in the loop above but i dont want to confuse myself
             var indexOfPropertiesOpener = varDef.IndexOf("[");
             var indexOfPropertiesCloser = varDef.IndexOf("]");
@@ -269,14 +291,14 @@ internal class SExpression
                 widgetProperties.Add(new()
                 {
                     name = property,
-                    description = $"Custom property for {widgetName}",
+                    description = $"Custom property for {typeName}",
                     dataType = YuckDataType.YuckString,
                 });
             }
             customYuckTypes.Add(new()
             {
                 //split prop from [ incase user didn't space proeprties from widget name 
-                name = widgetName,
+                name = typeName,
                 description = "A custom yuck type",
                 properties = widgetProperties.ToArray(),
                 IsUserDefined = true,
@@ -284,7 +306,7 @@ internal class SExpression
             });
 
         }
-        return customYuckTypes;
+        return (customYuckTypes,customVariables);
     }
     internal protected List<string> GetIncludes()
     {

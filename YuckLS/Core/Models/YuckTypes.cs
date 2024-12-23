@@ -63,23 +63,35 @@ internal class PropertyYuckCompletionContext : YuckCompletionContext
         return new CompletionList(_items);
     }
 }
-internal class PropertySuggestionCompletionContext : YuckCompletionContext
+internal class PropertySuggestionCompletionContext(IEwwWorkspace _workspace) : YuckCompletionContext
 {
     public required YuckType parentType;
     public required YuckProperty parentProperty;
-
     public override CompletionList Completions()
     {
         var suggestions = parentProperty.possibleValues;
-        if (suggestions is null || suggestions.Count() == 0) return new CompletionList();
-
-        foreach (var suggestion in suggestions)
+        if (suggestions is not null && suggestions.Count() > 0)
+        {
+            foreach (var suggestion in suggestions)
+            {
+                _items.Add(new()
+                {
+                    Label = suggestion,
+                    Kind = CompletionItemKind.EnumMember,
+                    InsertText = $"\"{suggestion}\"",
+                    Documentation = "A recommended variable for this type"
+                });
+            }
+        }
+        //there is definetly a neater more efficient way to do this
+        foreach (var customVariable in _workspace.UserDefinedVariables.Select(p => p.name).ToArray())
         {
             _items.Add(new()
             {
-                Label = suggestion,
+                Label = customVariable,
                 Kind = CompletionItemKind.Variable,
-                InsertText = $"\"{suggestion}\""
+                InsertText = customVariable,
+                Documentation = _workspace.UserDefinedVariables.Where(p=>p.name == customVariable).First().description 
             });
         }
         return new CompletionList(_items);
@@ -95,7 +107,11 @@ public class YuckType
     public bool IsGtkWidgetType = false;
     public bool IsUserDefined = false;
 }
-
+public class YuckVariable
+{
+    public required string name;
+    public required string description;
+}
 public class YuckProperty
 {
     public required string name;
@@ -113,6 +129,7 @@ public enum YuckDataType
     YuckFloat,
     Custom
 };
+
 /*
  * I should not hard-code these. I just don't know a better way to do it.
  */

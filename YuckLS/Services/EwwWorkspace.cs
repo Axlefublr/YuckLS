@@ -5,6 +5,7 @@ using YuckLS.Core;
 public interface IEwwWorkspace
 {
     public YuckType[] UserDefinedTypes {get;}
+    public YuckVariable[] UserDefinedVariables {get;}
     public void LoadWorkspace();
 }
 internal sealed class EwwWorkspace(ILogger<EwwWorkspace> _logger, ILoggerFactory _loggerFactory, IServiceProvider _serviceProvider) : IEwwWorkspace
@@ -12,7 +13,10 @@ internal sealed class EwwWorkspace(ILogger<EwwWorkspace> _logger, ILoggerFactory
     //store include paths and whether they have been visited 
     private System.Collections.Concurrent.ConcurrentDictionary<string, bool> _includePaths = new();
     private YuckType[] _userDefinedTypes = new YuckType[] { };
+    private YuckVariable[] _userDefinedVariable = new YuckVariable [] {};
     private string? _ewwRoot = null;
+
+    public YuckVariable[] UserDefinedVariables => _userDefinedVariable;
 
     YuckType[] IEwwWorkspace.UserDefinedTypes => _userDefinedTypes ;
 
@@ -21,6 +25,7 @@ internal sealed class EwwWorkspace(ILogger<EwwWorkspace> _logger, ILoggerFactory
         _logger.LogError("Loading workspace");
         //empty user types and include paths
         _userDefinedTypes = new YuckType[] {};
+        _userDefinedVariable = new YuckVariable[] {};
         _includePaths = new();
         var current_path = Directory.GetCurrentDirectory();
 
@@ -67,7 +72,8 @@ internal sealed class EwwWorkspace(ILogger<EwwWorkspace> _logger, ILoggerFactory
         var _ewwWorkspace = _serviceProvider.GetRequiredService<IEwwWorkspace>();
         var sExpression = new SExpression(ewwRootBuffer, _completionHandlerLogger, _ewwWorkspace);
         var customVariables = sExpression.GetVariables();
-        _userDefinedTypes = _userDefinedTypes.Concat(customVariables.ToArray()).ToArray();
+        _userDefinedTypes = _userDefinedTypes.Concat(customVariables.customWidgets.ToArray()).ToArray();
+        _userDefinedVariable = _userDefinedVariable.Concat(customVariables.customVariables.ToArray()).ToArray();
         List<string> includePaths = sExpression.GetIncludes();
         foreach (string include in includePaths)
         {

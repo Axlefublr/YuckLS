@@ -16,7 +16,7 @@ internal sealed class CompletionHandler(
         YuckLS.Services.IEwwWorkspace _workspace
         ) : CompletionHandlerBase
 {
-    private readonly string[] _triggerChars = { "(", ":" , " "};
+    private readonly string[] _triggerChars = { "(", ":" , " " , "${"};
     public override Task<CompletionItem> Handle(CompletionItem request, CancellationToken cancellationToken)
     {
         var ci = new CompletionItem
