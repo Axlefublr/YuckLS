@@ -101,43 +101,65 @@ public class SExpressionTest
             ;(defwidget 
             (     
         )",
+        
         //6
             @"
-(defwindow
-  (box :orientation horizontal
-       :halign center
-    text
-    (button :onclick notify-send 'Hello' 'Hello, ${name}'
-      Greet))
-    (",
-//7 
-@"
- (box :orientation v :spacing -200  :class media-box :visible isSpotify
-    (box  :height 300px :style background-image:url('${mediaart}') :class mediaart)
-    ; (label :text cava :class mediaartist
-    (label :text mediatitle :class mediatitle :truncate true
-        :placeholder hh
-     )
-    (label :text mediaartist :class mediaartist
-     :gddgdg
-     (box )
-    )
-   ("
+       (defwindow
+           (box :orientation horizontal
+               :halign center
+           text
+           (button :onclick notify-send 'Hello' 'Hello, ${name}'
+               Greet))
+           (",
+        
+        //7 
+        @"
+        (box :orientation v :spacing -200  :class media-box :visible isSpotify
+            (box  :height 300px :style background-image:url('${mediaart}') :class mediaart)
+            ; (label :text cava :class mediaartist
+            (label :text mediatitle :class mediatitle :truncate true
+                :placeholder hh
+            )
+            (label :text mediaartist :class mediaartist
+            :gddgdg
+            (box )
+            )
+            ("
+        };
+
+    //check bracket pairs test cases
+    private string[] _bracketPairsTestCases = new string[] {
+      //1
+      "(make (fast (system))",
+
+      //2
+      @")california (dreaming)
+            (defwindow  (box)))
+        ",
+      //3
+     @"()()()(())(close(man))"  ,
+      //4
+    @"(defwindow
+        (box 
+        (label)
+       ))
+      (defvar (box)
+    "
     };
     [Fact]
     public void IsTopLevelTest()
     {
         var CompletionHandlerLoggerMock = new Mock<Microsoft.Extensions.Logging.ILogger<YuckLS.Handlers.CompletionHandler>>();
         var ewwWorkspaceMock = new Mock<YuckLS.Services.IEwwWorkspace>();
-        var test1 = new SExpression(_isTopLevelTestCases[0], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).IsTopLevel();
-        var test2 = new SExpression(_isTopLevelTestCases[1], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).IsTopLevel();
-        var test3 = new SExpression(_isTopLevelTestCases[2], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).IsTopLevel();
-        var test4 = new SExpression(_isTopLevelTestCases[3], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).IsTopLevel();
-        var test5 = new SExpression(_isTopLevelTestCases[4], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).IsTopLevel();
-        var test6 = new SExpression(_isTopLevelTestCases[5], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).IsTopLevel();
-        var test7 = new SExpression(_isTopLevelTestCases[6], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).IsTopLevel();
-        var test8 = new SExpression(_isTopLevelTestCases[7], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).IsTopLevel();
-        var test9 = new SExpression(_isTopLevelTestCases[8], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).IsTopLevel();
+        var test1 = new SExpression(_isTopLevelTestCases[0], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).IsTopLevel();
+        var test2 = new SExpression(_isTopLevelTestCases[1], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).IsTopLevel();
+        var test3 = new SExpression(_isTopLevelTestCases[2], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).IsTopLevel();
+        var test4 = new SExpression(_isTopLevelTestCases[3], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).IsTopLevel();
+        var test5 = new SExpression(_isTopLevelTestCases[4], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).IsTopLevel();
+        var test6 = new SExpression(_isTopLevelTestCases[5], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).IsTopLevel();
+        var test7 = new SExpression(_isTopLevelTestCases[6], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).IsTopLevel();
+        var test8 = new SExpression(_isTopLevelTestCases[7], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).IsTopLevel();
+        var test9 = new SExpression(_isTopLevelTestCases[8], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).IsTopLevel();
         Assert.False(test1);
         Assert.True(test2);
         Assert.False(test3);
@@ -155,13 +177,13 @@ public class SExpressionTest
         //\(\w+[^\(]*\)
         var CompletionHandlerLoggerMock = new Mock<Microsoft.Extensions.Logging.ILogger<YuckLS.Handlers.CompletionHandler>>();
         var ewwWorkspaceMock = new Mock<YuckLS.Services.IEwwWorkspace>();
-        var test1 = new SExpression(_getParentNodeTestCases[0], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).GetParentNode();
-        var test2 = new SExpression(_getParentNodeTestCases[1], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).GetParentNode();
-        var test3 = new SExpression(_getParentNodeTestCases[2], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).GetParentNode();
-        var test4 = new SExpression(_getParentNodeTestCases[3], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).GetParentNode();
-        var test5 = new SExpression(_getParentNodeTestCases[4], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).GetParentNode();
-        var test6 = new SExpression(_getParentNodeTestCases[5], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).GetParentNode();
-        var test7 = new SExpression(_getParentNodeTestCases[6], CompletionHandlerLoggerMock.Object,ewwWorkspaceMock.Object).GetParentNode();
+        var test1 = new SExpression(_getParentNodeTestCases[0], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).GetParentNode();
+        var test2 = new SExpression(_getParentNodeTestCases[1], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).GetParentNode();
+        var test3 = new SExpression(_getParentNodeTestCases[2], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).GetParentNode();
+        var test4 = new SExpression(_getParentNodeTestCases[3], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).GetParentNode();
+        var test5 = new SExpression(_getParentNodeTestCases[4], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).GetParentNode();
+        var test6 = new SExpression(_getParentNodeTestCases[5], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).GetParentNode();
+        var test7 = new SExpression(_getParentNodeTestCases[6], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).GetParentNode();
         Assert.Equal(test1, "box");
         Assert.Equal(test2, "defvar");
         Assert.Equal(test3, "defwidget");
@@ -169,5 +191,20 @@ public class SExpressionTest
         Assert.Equal(test5, "defpoll");
         Assert.Equal(test6, "defwindow");
         Assert.Equal(test7, "box");
+    }
+
+    [Fact]
+    public void CheckBracketPairsTest()
+    {
+        var CompletionHandlerLoggerMock = new Mock<Microsoft.Extensions.Logging.ILogger<YuckLS.Handlers.CompletionHandler>>();
+        var ewwWorkspaceMock = new Mock<YuckLS.Services.IEwwWorkspace>();
+        var test1 = new SExpression(_bracketPairsTestCases[0], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).CheckBracketPairs();
+        var test2 = new SExpression(_bracketPairsTestCases[1], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).CheckBracketPairs();
+        var test3 = new SExpression(_bracketPairsTestCases[2], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).CheckBracketPairs();
+        var test4 = new SExpression(_bracketPairsTestCases[3],CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).CheckBracketPairs();
+        Assert.Equal(test1, new List<int> { 0 });
+        Assert.Equal(test2, new List<int> { 0, _bracketPairsTestCases[1].TrimEnd().Length-1 });
+        Assert.Equal(test3, new List<int> { });
+        Assert.Equal(test4, new List<int> {_bracketPairsTestCases[3].IndexOf("(defvar")});        
     }
 }

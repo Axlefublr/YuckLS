@@ -1,13 +1,13 @@
-using YuckLS.Services;
-
 namespace YuckLS.Handlers;
-
+using YuckLS.Services;
+using YuckLS.Core;
 internal sealed class TextDocumentSyncHandler(
         ILogger<TextDocumentSyncHandler> _logger,
         ILanguageServerConfiguration _configuration,
         IBufferService _bufferService,
         TextDocumentSelector _textDocumentSelector,
-        IEwwWorkspace _ewwWorkspace
+        IEwwWorkspace _ewwWorkspace,
+        ILoggerFactory _loggerFactory
         ) : TextDocumentSyncHandlerBase
 {
     public override TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri)
@@ -36,9 +36,16 @@ internal sealed class TextDocumentSyncHandler(
                 _bufferService.ApplyFullChange(request.TextDocument.Uri, change.Text);
             }
         }
+        string? _text = _bufferService.GetText(request.TextDocument.Uri);
+        if (_text != null)
+        {
+            //some form of throttling should be implemented here
+           var completionHandlerLogger =  _loggerFactory.CreateLogger<CompletionHandler>();
+            YuckCheck yuckCheck = new(_text, completionHandlerLogger, _ewwWorkspace);
+            yuckCheck.TryGetDiagnostics();
+        }
         return Task.FromResult(Unit.Value);
     }
-
     public override Task<Unit> Handle(DidSaveTextDocumentParams request, CancellationToken cancellationToken)
     {
         //reload workspace when buffer is saved , i'm not sure that this is the most ideal way to do this 

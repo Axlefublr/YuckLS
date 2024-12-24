@@ -21,6 +21,16 @@ internal sealed class BufferService(Microsoft.Extensions.Logging.ILogger<BufferS
         //  throw new NotImplementedException();
     }
 
+    public string? GetText(DocumentUri key){
+        Buffer? fullBuffer = null;
+        _buffers.TryGetValue(key, out fullBuffer);
+
+        if(fullBuffer != null){
+            return fullBuffer.GetText();
+        }
+        //document does not exist in dictionary
+        return null;
+    }
     private static string Splice(string buffer, Range range, string text)
     {
         var start = GetIndex(buffer, range.Start);

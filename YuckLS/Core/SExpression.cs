@@ -2,12 +2,18 @@ using System.Text.RegularExpressions;
 using YuckLS.Core.Models;
 using System.Runtime.CompilerServices;
 using YuckLS.Services;
+using System.Collections;
 [assembly: InternalsVisibleTo("YuckLS.Test")]
 namespace YuckLS.Core;
 internal class SExpression
 {
     private readonly string _text;
+    //completion text refers to chopped text at the cursor position for completion.
     private readonly string _completionText;
+    public string FullText => _fullText;
+    //full text refers to text used for getting variables and diagnostics
+    private readonly string _fullText;
+    
     private readonly ILogger<YuckLS.Handlers.CompletionHandler> _logger;
     private IEwwWorkspace _workspace;
     public SExpression(string _text, ILogger<YuckLS.Handlers.CompletionHandler> _logger, IEwwWorkspace _workspace)
@@ -15,13 +21,15 @@ internal class SExpression
         this._text = _text;
         this._logger = _logger;
         _completionText = this._text;
-
+        _fullText = this._text;
         //recursively delete char in quotes to prevent interferance
         _completionText = RemoveAllQuotedChars(_completionText);
+        _fullText = RemoveAllQuotedChars(_fullText);    
         //delete comments from text to prevent interferance, this must be done after characters in quotes have been removed or completer might break and pop last char from text(the completion trigger)
         if (_completionText.Length > 0)
         {
             _completionText = RemoveComments(_completionText)[..^1];
+            _fullText = RemoveComments(_fullText);
         }
         this._workspace = _workspace;
     }
@@ -192,8 +200,7 @@ internal class SExpression
         //temp
         if (shouldRestartLoop) return RemoveAllQuotedChars(textCopy);
         return textCopy;
-    }
-
+    } 
     private string RemoveComments(string input)
     {
         //should probably use regex for this 
@@ -225,8 +232,7 @@ internal class SExpression
         //remove comments and strings from text 
         List<YuckType> customYuckTypes = new();
         List<YuckVariable> customVariables = new();
-        var text = RemoveAllQuotedChars(_text);
-        text = RemoveComments(_text);
+        var text = _fullText;
         string varDefPatterns = @"\((deflisten|defpoll|defvar|defwidget)[^)]*\)";
         //string varDefPatterns = @"\((defwidget)[^)]*\)";
         var matches = Regex.Matches(text, varDefPatterns);
@@ -327,5 +333,36 @@ internal class SExpression
             results.Add(pathSlice);
         }
         return results;
+    }
+    ///<summary>
+    ///check for any brackets that are idle
+    ///</summary>
+    internal protected List<int> CheckBracketPairs(){
+        //store the indexes of idle open or close brackets
+        List<int> problematicIndices = new(); 
+        Stack<int> brackets = new();
+        var text = RemoveAllQuotedChars(_text);
+        text = RemoveComments(text);
+        int index = 0;
+        foreach(char x in text){
+            if(x == '(') brackets.Push(index);
+            //if we meet a closer
+            else if(x == ')'){
+                //if there are valid openers, remove one as we have found a match
+                if(brackets.Count > 0){
+                    brackets.Pop();
+                }
+
+                //if there are no valid openers, we have encountered brackets that can never be closed
+                else{
+                    problematicIndices.Add(index);
+                }
+            }      
+            index++;
+        }
+        foreach(int x in brackets){
+            if(!problematicIndices.Contains(x)) problematicIndices.Add(x);
+        }
+        return problematicIndices;
     }
 }

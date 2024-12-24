@@ -28,6 +28,11 @@ internal interface IBufferService
     public void Add(DocumentUri key, string text);
 
     ///<summary>
+    ///Get full text from a buffer if it exists
+    ///</summary> 
+    public string? GetText(DocumentUri key);
+
+    ///<summary>
     ///Remove a Buffer from the concurrentDictionary that stores all buffers. Will be invoked on documentClose
     public void Remove(DocumentUri key);
 
