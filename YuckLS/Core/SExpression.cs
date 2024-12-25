@@ -13,7 +13,7 @@ internal class SExpression
     public string FullText => _fullText;
     //full text refers to text used for getting variables and diagnostics
     private readonly string _fullText;
-    
+
     private readonly ILogger<YuckLS.Handlers.CompletionHandler> _logger;
     private IEwwWorkspace _workspace;
     public SExpression(string _text, ILogger<YuckLS.Handlers.CompletionHandler> _logger, IEwwWorkspace _workspace)
@@ -24,7 +24,7 @@ internal class SExpression
         _fullText = this._text;
         //recursively delete char in quotes to prevent interferance
         _completionText = RemoveAllQuotedChars(_completionText);
-        _fullText = RemoveAllQuotedChars(_fullText);    
+        _fullText = RemoveAllQuotedChars(_fullText);
         //delete comments from text to prevent interferance, this must be done after characters in quotes have been removed or completer might break and pop last char from text(the completion trigger)
         if (_completionText.Length > 0)
         {
@@ -181,7 +181,7 @@ internal class SExpression
                     if (text[i - 1] == '\\') { continue; }
 
                     //if it is not escaped, then it is the end of the original quote. Delete the Substring from the textCopy 
-                    textCopy = textCopy.Remove(indexOfOpenQuote, (i - indexOfOpenQuote) + 1);
+                   // textCopy = textCopy.Remove(indexOfOpenQuote, (i - indexOfOpenQuote) + 1);
 
                     //reset variables 
                     //i cant figure out how to fix the indexing after deleting parts of the string. Feel so stupid rn. 
@@ -191,7 +191,13 @@ internal class SExpression
                     /**/
                     /*i = indexOfOpenQuote -1;*/
                     //restart loop 
-                    shouldRestartLoop = true;
+
+                    //the original code above completely removed the substrings. refactored it to replace it with a substitute instead becasue i might need to preserve the original indices. I can probably remove that terribly inefficient recursion now but i'll do that later.
+                    int lengthToReplace = (i - indexOfOpenQuote) + 1;
+                    string maskedSubstring = new string('*', lengthToReplace);
+                    textCopy = textCopy.Remove(indexOfOpenQuote, lengthToReplace)
+                                       .Insert(indexOfOpenQuote, maskedSubstring);
+                     shouldRestartLoop = true;
                     break;
 
                 }
@@ -200,7 +206,8 @@ internal class SExpression
         //temp
         if (shouldRestartLoop) return RemoveAllQuotedChars(textCopy);
         return textCopy;
-    } 
+    }
+    //this used to completely remove the substring, changed it to substitute it with something else because we might need to retain the original indices
     private string RemoveComments(string input)
     {
         //should probably use regex for this 
@@ -210,7 +217,11 @@ internal class SExpression
             int semicolonIndex = lines[i].IndexOf(';');
             if (semicolonIndex >= 0)
             {
-                lines[i] = lines[i].Substring(0, semicolonIndex);
+                int lengthToMask = lines[i].Length - semicolonIndex;
+                lines[i] = lines[i].Substring(0, semicolonIndex) + new string('*', lengthToMask);
+
+                //this was the original code which completely removed the substring
+                //  lines[i] = lines[i].Substring(0, semicolonIndex);
             }
         }
         return string.Join(Environment.NewLine, lines);
@@ -227,7 +238,7 @@ internal class SExpression
         return null;
     }
 
-    internal protected (List<YuckType> customWidgets , List<YuckVariable> customVariables) GetVariables()
+    internal protected (List<YuckType> customWidgets, List<YuckVariable> customVariables) GetVariables()
     {
         //remove comments and strings from text 
         List<YuckType> customYuckTypes = new();
@@ -312,7 +323,7 @@ internal class SExpression
             });
 
         }
-        return (customYuckTypes,customVariables);
+        return (customYuckTypes, customVariables);
     }
     internal protected List<string> GetIncludes()
     {
@@ -337,31 +348,36 @@ internal class SExpression
     ///<summary>
     ///check for any brackets that are idle
     ///</summary>
-    internal protected List<int> CheckBracketPairs(){
-        //store the indexes of idle open or close brackets
-        List<int> problematicIndices = new(); 
+    internal protected List<int> CheckBracketPairs()
+    {
+        //store the indexes of idle open or close brackets. We need to get the indices on the original char
+        List<int> problematicIndices = new();
         Stack<int> brackets = new();
-        var text = RemoveAllQuotedChars(_text);
-        text = RemoveComments(text);
+        var text = _fullText;
         int index = 0;
-        foreach(char x in text){
-            if(x == '(') brackets.Push(index);
+        foreach (char x in text)
+        {
+            if (x == '(') brackets.Push(index);
             //if we meet a closer
-            else if(x == ')'){
+            else if (x == ')')
+            {
                 //if there are valid openers, remove one as we have found a match
-                if(brackets.Count > 0){
+                if (brackets.Count > 0)
+                {
                     brackets.Pop();
                 }
 
                 //if there are no valid openers, we have encountered brackets that can never be closed
-                else{
+                else
+                {
                     problematicIndices.Add(index);
                 }
-            }      
+            }
             index++;
         }
-        foreach(int x in brackets){
-            if(!problematicIndices.Contains(x)) problematicIndices.Add(x);
+        foreach (int x in brackets)
+        {
+            if (!problematicIndices.Contains(x)) problematicIndices.Add(x);
         }
         return problematicIndices;
     }

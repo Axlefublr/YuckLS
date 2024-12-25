@@ -1,9 +1,13 @@
 namespace YuckLS.Handlers;
 using YuckLS.Services;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using OmniSharp.Extensions.LanguageServer.Server;
+using OmniSharp.Extensions.LanguageServer.Protocol;
 using YuckLS.Core;
 internal sealed class TextDocumentSyncHandler(
         ILogger<TextDocumentSyncHandler> _logger,
         ILanguageServerConfiguration _configuration,
+        IServiceProvider _serviceProvider,
         IBufferService _bufferService,
         TextDocumentSelector _textDocumentSelector,
         IEwwWorkspace _ewwWorkspace,
@@ -40,9 +44,15 @@ internal sealed class TextDocumentSyncHandler(
         if (_text != null)
         {
             //some form of throttling should be implemented here
-           var completionHandlerLogger =  _loggerFactory.CreateLogger<CompletionHandler>();
+            var completionHandlerLogger = _loggerFactory.CreateLogger<CompletionHandler>();
             YuckCheck yuckCheck = new(_text, completionHandlerLogger, _ewwWorkspace);
-            yuckCheck.TryGetDiagnostics();
+            var diagnostics = yuckCheck.TryGetDiagnostics();
+            var _languageServer = _serviceProvider.GetRequiredService<ILanguageServer>();
+            _languageServer.PublishDiagnostics(new PublishDiagnosticsParams
+            {
+                Uri = request.TextDocument.Uri,
+                Diagnostics = diagnostics
+            });
         }
         return Task.FromResult(Unit.Value);
     }
