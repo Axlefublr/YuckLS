@@ -1,7 +1,6 @@
 namespace YuckLS.Handlers;
 using YuckLS.Services;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using OmniSharp.Extensions.LanguageServer.Server;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using YuckLS.Core;
 internal sealed class TextDocumentSyncHandler(
@@ -24,6 +23,8 @@ internal sealed class TextDocumentSyncHandler(
         _ewwWorkspace.LoadWorkspace();
         var conf = await _configuration.GetScopedConfiguration(request.TextDocument.Uri, cancellationToken);
         _bufferService.Add(request.TextDocument.Uri, request.TextDocument.Text);
+        //load diagnostics on document open
+        LoadDiagnostics(request.TextDocument.Uri);
         return Unit.Value;
     }
 
@@ -40,7 +41,12 @@ internal sealed class TextDocumentSyncHandler(
                 _bufferService.ApplyFullChange(request.TextDocument.Uri, change.Text);
             }
         }
-        string? _text = _bufferService.GetText(request.TextDocument.Uri);
+        LoadDiagnostics(request.TextDocument.Uri);
+        return Task.FromResult(Unit.Value);
+    }
+    private void LoadDiagnostics(DocumentUri documentUri)
+    {
+        string? _text = _bufferService.GetText(documentUri);
         if (_text != null)
         {
             //some form of throttling should be implemented here
@@ -50,11 +56,10 @@ internal sealed class TextDocumentSyncHandler(
             var _languageServer = _serviceProvider.GetRequiredService<ILanguageServer>();
             _languageServer.PublishDiagnostics(new PublishDiagnosticsParams
             {
-                Uri = request.TextDocument.Uri,
+                Uri = documentUri,
                 Diagnostics = diagnostics
             });
         }
-        return Task.FromResult(Unit.Value);
     }
     public override Task<Unit> Handle(DidSaveTextDocumentParams request, CancellationToken cancellationToken)
     {

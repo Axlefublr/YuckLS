@@ -2,7 +2,6 @@ using System.Text.RegularExpressions;
 using YuckLS.Core.Models;
 using System.Runtime.CompilerServices;
 using YuckLS.Services;
-using System.Collections;
 [assembly: InternalsVisibleTo("YuckLS.Test")]
 namespace YuckLS.Core;
 internal class SExpression
@@ -181,7 +180,7 @@ internal class SExpression
                     if (text[i - 1] == '\\') { continue; }
 
                     //if it is not escaped, then it is the end of the original quote. Delete the Substring from the textCopy 
-                   // textCopy = textCopy.Remove(indexOfOpenQuote, (i - indexOfOpenQuote) + 1);
+                    // textCopy = textCopy.Remove(indexOfOpenQuote, (i - indexOfOpenQuote) + 1);
 
                     //reset variables 
                     //i cant figure out how to fix the indexing after deleting parts of the string. Feel so stupid rn. 
@@ -197,7 +196,7 @@ internal class SExpression
                     string maskedSubstring = new string('*', lengthToReplace);
                     textCopy = textCopy.Remove(indexOfOpenQuote, lengthToReplace)
                                        .Insert(indexOfOpenQuote, maskedSubstring);
-                     shouldRestartLoop = true;
+                    shouldRestartLoop = true;
                     break;
 
                 }
@@ -380,5 +379,19 @@ internal class SExpression
             if (!problematicIndices.Contains(x)) problematicIndices.Add(x);
         }
         return problematicIndices;
+    }
+
+    ///<summary>
+    ///Get every node in the document and their position(index)
+    ///</summary>
+    internal protected List<(string nodeName , int index)> GetAllNodes(){
+        List<(string node ,int index)> result = new();
+        string patternForNodes = @"\(\w+";
+        var matches = Regex.Matches(_fullText,patternForNodes).ToArray();
+        foreach(var match in matches){
+            string nodeName = match.Value[0] == '(' ? match.Value[1..] : match.Value;
+            result.Add((nodeName, match.Index));
+        }
+        return result;
     }
 }
