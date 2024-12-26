@@ -63,7 +63,7 @@ https://github.com/user-attachments/assets/a587fae7-3c4c-49c3-bb83-88ed9af4f902
 
 ✔️ Basic Completions for custom widgets 
 
-❌ Diagnostics and error reporting
+✔️ Basic Diagnostics and error reporting
 
 ❌ Go to definition for custom widgets and variables
 
