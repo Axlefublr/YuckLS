@@ -14,6 +14,7 @@ internal sealed class YuckCheck(string _text, Microsoft.Extensions.Logging.ILogg
         GetBracketPairsErrors();
         GetUnkownTypeErrors();
         GetInvalidTopLevelDefinitionErrors();
+        GetInvalidPropertyDefinition();
         return _diagnostics;
     }
     private void GetBracketPairsErrors()
@@ -75,6 +76,29 @@ internal sealed class YuckCheck(string _text, Microsoft.Extensions.Logging.ILogg
                 _diagnostics.Add(new(){
                     Range = new Range(convertIndexToPosition(node.index), convertIndexToPosition(node.index+1)),
                     Message = $"'{node.nodeName}' should be declared at the top level and not nested within another declaration",
+                    Severity = DiagnosticSeverity.Error
+                });
+            }
+        }
+    }
+    private void GetInvalidPropertyDefinition(){
+        var properties = _sExpression.GetAllProperyDefinitions();
+        //split the text at the index of each property, get the parent type and check if that type has a defintion for this property
+        foreach(var property in properties){
+            var part1 = _sExpression.FullText.Substring(0,property.index);
+            //create a new sexpression
+            var sexpression = new SExpression(part1, _logger, _workspace);
+            string? parentNode = sexpression.GetParentNode();
+            if(parentNode is null) continue;
+            var parentType = YuckTypesProvider.YuckTypes.Concat(_workspace.UserDefinedTypes).Where(p=>p.name == parentNode).FirstOrDefault();
+            if(parentType is null) continue;
+
+            //try to get property,
+            var realProperty = parentType.properties.Where(p=>p.name == property.propertyName).FirstOrDefault();
+            if(realProperty is null){
+                _diagnostics.Add(new(){
+                    Range = new Range(convertIndexToPosition(property.index), convertIndexToPosition(property.index + 1)),
+                    Message = $"'{parentType.name}' does not contain a definition for {property.propertyName}",
                     Severity = DiagnosticSeverity.Error
                 });
             }

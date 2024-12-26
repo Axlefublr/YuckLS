@@ -394,4 +394,14 @@ internal class SExpression
         }
         return result;
     }
+    internal protected List<(string propertyName, int index)> GetAllProperyDefinitions(){
+        List<(string property , int index)> result = new();
+        string patternForProperties = @":[\w-]+";
+        var matches = Regex.Matches(_fullText,patternForProperties).ToArray();
+        foreach(var match in matches){
+            string propertyName = match.Value[0] == ':' ? match.Value[1..] : match.Value;
+            result.Add((propertyName,match.Index));
+        }
+        return result;
+    }
 }
