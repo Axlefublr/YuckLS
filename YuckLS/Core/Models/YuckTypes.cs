@@ -893,6 +893,12 @@ public static class YuckTypesProvider
           }
         }.Concat(_commonGtkWidgetProperties).ToArray()
     },
+    new(){
+      name = "for",
+      description = "Loop over a dataset",
+      //i mean... technically
+      IsGtkWidgetType = true
+    },
     new() {
       name = "transform",
         description = "A widget that applies transformations to its content. They are applied in the following order: rotate -> translate -> scale.",

@@ -386,11 +386,11 @@ internal class SExpression
     ///</summary>
     internal protected List<(string nodeName , int index)> GetAllNodes(){
         List<(string node ,int index)> result = new();
-        string patternForNodes = @"\(\w+";
+        string patternForNodes = @"\(\w+[^ )]*";
         var matches = Regex.Matches(_fullText,patternForNodes).ToArray();
         foreach(var match in matches){
             string nodeName = match.Value[0] == '(' ? match.Value[1..] : match.Value;
-            result.Add((nodeName, match.Index));
+            result.Add((nodeName.Trim(), match.Index));
         }
         return result;
     }
