@@ -91,7 +91,7 @@ internal class PropertySuggestionCompletionContext(IEwwWorkspace _workspace) : Y
                 Label = customVariable,
                 Kind = CompletionItemKind.Variable,
                 InsertText = customVariable,
-                Documentation = _workspace.UserDefinedVariables.Where(p=>p.name == customVariable).First().description 
+                Documentation = _workspace.UserDefinedVariables.Where(p => p.name == customVariable).First().description
             });
         }
         return new CompletionList(_items);
@@ -224,7 +224,7 @@ public static class YuckTypesProvider
           new() {
             name = "monitor",
               description = "The monitor index to display this window on",
-              dataType = YuckDataType.YuckString,
+              dataType = YuckDataType.Custom,
           },
           new() {
             name = "geometry",
@@ -330,7 +330,7 @@ public static class YuckTypesProvider
           new() {
             name = "run-while",
               description = "Condition that must be fulfilled for poll to run",
-              dataType = YuckDataType.YuckString,
+              dataType = YuckDataType.YuckBool,
           }
         }
     },
@@ -376,7 +376,25 @@ public static class YuckTypesProvider
       name = "revealer",
         description = "A widget that can reveal a child with an animation.",
         IsGtkWidgetType = true,
-        AreWidgetsEmbeddable = true
+        AreWidgetsEmbeddable = true,
+        properties = new YuckProperty[]{
+          new(){
+            name = "transition",
+            description = "the name of the transition",
+            dataType = YuckDataType.YuckString,
+            possibleValues = new string[] {"slideright", "slideleft", "slideup", "slidedown", "crossfade", "none"}
+          },
+          new(){
+            name = "reveal",
+            description = "sets if the child is revealed or not",
+            dataType = YuckDataType.YuckBool,
+          },
+          new(){
+            name = "duration",
+            description = "the duration of the reveal transition.",
+            dataType = YuckDataType.YuckDuration
+          }
+        }
     },
     new() {
       name = "checkbox",
@@ -1056,6 +1074,11 @@ public static class YuckTypesProvider
             name = "prepend-new",
               description = "prepend new icons",
               dataType = YuckDataType.YuckBool
+          },
+          new(){
+            name = "icon-size",
+            description = "Size of the icons",
+            dataType = YuckDataType.YuckInt
           }
         }.Concat(_commonGtkWidgetProperties).ToArray()
     },
@@ -1070,13 +1093,13 @@ public static class YuckTypesProvider
           new() {
             name = "x",
               description = "The x-axis position",
-              dataType = YuckDataType.YuckString
-          },
+              dataType = YuckDataType.Custom
+                },
           new() {
             name = "y",
               description = "The y-axis position",
-              dataType = YuckDataType.YuckString
-          },
+              dataType = YuckDataType.Custom
+               },
           new() {
             name = "width",
               description = "The width of the window",

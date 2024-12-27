@@ -11,10 +11,12 @@ internal sealed class YuckCheck(string _text, Microsoft.Extensions.Logging.ILogg
     private List<Diagnostic> _diagnostics = new();
     public List<Diagnostic> TryGetDiagnostics()
     {
+        //bunch of these methods do the same thing over and over. I should find a way to combine them into one method eventually
         GetBracketPairsErrors();
         GetUnkownTypeErrors();
         GetInvalidTopLevelDefinitionErrors();
         GetInvalidPropertyDefinition();
+        GetInvalidPropertyValuesErrors();
         return _diagnostics;
     }
     private void GetBracketPairsErrors()
@@ -43,7 +45,7 @@ internal sealed class YuckCheck(string _text, Microsoft.Extensions.Logging.ILogg
 
             _diagnostics.Add(new()
             {
-                Range = new Range(convertIndexToPosition(node.index), convertIndexToPosition(node.index + 1)),
+                Range = new Range(convertIndexToPosition(node.index), convertIndexToPosition(node.index + node.nodeName.Length)),
                 Severity = DiagnosticSeverity.Error,
                 Message = $"Type or widget '{node.nodeName}' does not exist. This may cause issues. ",
             });
@@ -67,43 +69,168 @@ internal sealed class YuckCheck(string _text, Microsoft.Extensions.Logging.ILogg
             {
                 _diagnostics.Add(new()
                 {
-                    Range = new Range(convertIndexToPosition(node.index), convertIndexToPosition(node.index + 1)),
+                    Range = new Range(convertIndexToPosition(node.index), convertIndexToPosition(node.index + node.nodeName.Length)),
                     Message = $"Did not expect '{node.nodeName}' here, expected top level declaration: defwindow, defwidget, defpoll, defvar, include, deflisten.",
                     Severity = DiagnosticSeverity.Error
                 });
             }
-            else if(!sexpression.IsTopLevel() && yuckType.IsTopLevel){
-                _diagnostics.Add(new(){
-                    Range = new Range(convertIndexToPosition(node.index), convertIndexToPosition(node.index+1)),
+            else if (!sexpression.IsTopLevel() && yuckType.IsTopLevel)
+            {
+                _diagnostics.Add(new()
+                {
+                    Range = new Range(convertIndexToPosition(node.index), convertIndexToPosition(node.index + node.nodeName.Length)),
                     Message = $"'{node.nodeName}' should be declared at the top level and not nested within another declaration",
                     Severity = DiagnosticSeverity.Error
                 });
             }
         }
     }
-    private void GetInvalidPropertyDefinition(){
+    private void GetInvalidPropertyDefinition()
+    {
         var properties = _sExpression.GetAllProperyDefinitions();
         //split the text at the index of each property, get the parent type and check if that type has a defintion for this property
-        foreach(var property in properties){
-            var part1 = _sExpression.FullText.Substring(0,property.index);
+        foreach (var property in properties)
+        {
+            var part1 = _sExpression.FullText.Substring(0, property.index);
             //create a new sexpression
             var sexpression = new SExpression(part1, _logger, _workspace);
             string? parentNode = sexpression.GetParentNode();
-            if(parentNode is null) continue;
-            var parentType = YuckTypesProvider.YuckTypes.Concat(_workspace.UserDefinedTypes).Where(p=>p.name == parentNode).FirstOrDefault();
-            if(parentType is null) continue;
+            if (parentNode is null) continue;
+            var parentType = YuckTypesProvider.YuckTypes.Concat(_workspace.UserDefinedTypes).Where(p => p.name == parentNode).FirstOrDefault();
+            if (parentType is null) continue;
 
             //try to get property,
-            var realProperty = parentType.properties.Where(p=>p.name == property.propertyName).FirstOrDefault();
-            if(realProperty is null){
-                _diagnostics.Add(new(){
-                    Range = new Range(convertIndexToPosition(property.index), convertIndexToPosition(property.index + 1)),
+            var realProperty = parentType.properties.Where(p => p.name == property.propertyName).FirstOrDefault();
+            if (realProperty is null)
+            {
+                _diagnostics.Add(new()
+                {
+                    Range = new Range(convertIndexToPosition(property.index), convertIndexToPosition(property.index + property.propertyName.Length)),
                     Message = $"'{parentType.name}' does not contain a definition for {property.propertyName}",
                     Severity = DiagnosticSeverity.Error
                 });
             }
         }
     }
+
+    private void GetInvalidPropertyValuesErrors()
+    {
+        var propertyValues = _sExpression.GetAllPropertyValues();
+        foreach (var propertyValue in propertyValues)
+        {
+            //GET PARENT NODE AND PROPERTY
+            var part1 = _sExpression.FullText.Substring(0, propertyValue.index);
+            //create a new sexpression
+            var sexpression = new SExpression(part1, _logger, _workspace);
+            string? parentNode = sexpression.GetParentNode();
+            string? parentProperty = propertyValue.property;
+
+            if (parentNode is null || parentProperty is null) continue;
+
+            var parentType = YuckTypesProvider.YuckTypes.Concat(_workspace.UserDefinedTypes).Where(p => p.name == parentNode).FirstOrDefault();
+            if (parentType is null) continue;
+
+            var parentPropertyType = parentType.properties.Where(p => p.name == parentProperty).FirstOrDefault();
+            if (parentPropertyType is null) continue;
+
+            var diagnosticsRange = new Range(convertIndexToPosition(propertyValue.index), convertIndexToPosition(propertyValue.index + propertyValue.propertyValue.Length));
+            string readableExpectedType = "";
+            switch (parentPropertyType.dataType)
+            {
+                case YuckDataType.YuckString:
+                    readableExpectedType = "string";
+                    break;
+                case YuckDataType.YuckInt:
+                    readableExpectedType = "int";
+                    break;
+                case YuckDataType.YuckBool:
+                    readableExpectedType = "bool";
+                    break;
+                case YuckDataType.YuckDuration:
+                    readableExpectedType = "duration";
+                    break;
+                case YuckDataType.YuckFloat:
+                    readableExpectedType = "float";
+                    break;
+                default:
+                    readableExpectedType = "custom";
+                    break;
+            }
+            // _logger.LogError($"property is {parentProperty} and property value is {propertyValue.propertyValue}");
+            //wildcard, every property should be able to take a user defined variable although with a warning that the type might not match;
+            if (_workspace.UserDefinedVariables.Where(p => p.name == propertyValue.propertyValue).Count() != 0)
+            {
+                _diagnostics.Add(new()
+                {
+                    Range = diagnosticsRange,
+                    Message = $"{parentProperty} expects {readableExpectedType} here but got a variable instead. This might cause issues ",
+                    Severity = DiagnosticSeverity.Warning
+                });
+                continue;
+            }
+            if (parentPropertyType.dataType == YuckDataType.YuckString)
+            {
+                //should have single or double quotes on either side. Pretty easy
+                if ((propertyValue.propertyValue.First() == '\"' && propertyValue.propertyValue.Last() == '\"')
+                    || (propertyValue.propertyValue.First() == '\'' && propertyValue.propertyValue.Last() == '\'')
+                )
+                {
+                    continue;
+                }
+                _diagnostics.Add(new()
+                {
+                    Range = diagnosticsRange,
+                    Message = $"{parentProperty} expects type string here but string not given",
+                    Severity = DiagnosticSeverity.Error
+                });
+            }
+            else if (parentPropertyType.dataType == YuckDataType.YuckInt)
+            {
+                //try to parse this as an int,
+                if (!int.TryParse(propertyValue.propertyValue, out int placeholder))
+                {
+                    _diagnostics.Add(new()
+                    {
+                        Range = diagnosticsRange,
+                        Message = $"{parentProperty} expects type int, but int not given",
+                        Severity = DiagnosticSeverity.Error
+                    });
+                }
+            }
+            else if (parentPropertyType.dataType == YuckDataType.YuckBool)
+            {
+                //try to parse as a bool
+                if (!bool.TryParse(propertyValue.propertyValue, out bool placeholder))
+                {
+                    _diagnostics.Add(new()
+                    {
+                        Range = diagnosticsRange,
+                        Message = $"{parentProperty} expects type bool, but bool not given",
+                        Severity = DiagnosticSeverity.Error
+                    });
+                }
+            }
+            else if(parentPropertyType.dataType == YuckDataType.YuckFloat){
+                //try to parse as a float
+                if (!float.TryParse(propertyValue.propertyValue, out float placeholder))
+                {
+                    _diagnostics.Add(new()
+                    {
+                        Range = diagnosticsRange,
+                        Message = $"{parentProperty} expects type float, but float not given",
+                        Severity = DiagnosticSeverity.Error
+                    });
+                }
+            }
+            else if(parentPropertyType.dataType == YuckDataType.YuckDuration ){
+                //figure thi out later
+            }
+            else{
+                //wildcard, do nothing for now
+            }
+        }
+    }
+
     //i dont fully understand how this method works
     private Position convertIndexToPosition(int pos)
     {

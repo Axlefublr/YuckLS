@@ -227,7 +227,8 @@ internal class SExpression
     }
     ///<summary>
     ///Pretty much just do some simple string parsing to get the property on which the completion request was invoked on. e.g (box :height , height would be the property.
-    private string? GetParentProperty()
+    ///</summary>
+    internal protected string? GetParentProperty()
     {
         //select last line 
         string lastLine = _completionText.Split(Environment.NewLine).Last();
@@ -384,23 +385,63 @@ internal class SExpression
     ///<summary>
     ///Get every node in the document and their position(index)
     ///</summary>
-    internal protected List<(string nodeName , int index)> GetAllNodes(){
-        List<(string node ,int index)> result = new();
+    internal protected List<(string nodeName, int index)> GetAllNodes()
+    {
+        List<(string node, int index)> result = new();
         string patternForNodes = @"\(\w+[^ )]*";
-        var matches = Regex.Matches(_fullText,patternForNodes).ToArray();
-        foreach(var match in matches){
+        var matches = Regex.Matches(_fullText, patternForNodes).ToArray();
+        foreach (var match in matches)
+        {
             string nodeName = match.Value[0] == '(' ? match.Value[1..] : match.Value;
             result.Add((nodeName.Trim(), match.Index));
         }
         return result;
     }
-    internal protected List<(string propertyName, int index)> GetAllProperyDefinitions(){
-        List<(string property , int index)> result = new();
+    ///<summary>
+    ///Get every property defined on a node and it's position
+    ///</summary>
+    internal protected List<(string propertyName, int index)> GetAllProperyDefinitions()
+    {
+        List<(string property, int index)> result = new();
         string patternForProperties = @":[\w-]+";
-        var matches = Regex.Matches(_fullText,patternForProperties).ToArray();
-        foreach(var match in matches){
+        var matches = Regex.Matches(_fullText, patternForProperties).ToArray();
+        foreach (var match in matches)
+        {
             string propertyName = match.Value[0] == ':' ? match.Value[1..] : match.Value;
-            result.Add((propertyName,match.Index));
+            result.Add((propertyName, match.Index));
+        }
+        return result;
+    }
+
+    ///<summary>
+    ///Get every property value and it's position
+    ///</summary>
+    internal protected List<(string propertyValue, string property, int index)> GetAllPropertyValues()
+    {
+        List<(string, string, int)> result = new();
+        //i'm basically copying and pasting the method above, we should find the property first and then get the next word after it.
+        string patternForProperties = @":[\w-]+";
+        var matches = Regex.Matches(_fullText, patternForProperties).ToArray();
+        foreach (var match in matches)
+        {
+            //go through the chars manually and find the property value. Doing it this way because it makes it easier to map onto _text and find the true value that has not been obfuscated
+            int startIndex = match.Value.Length + match.Index;
+            int endIndex = startIndex; //start counting initially from the start index
+            bool foundSequence = false;
+            foreach(char c in _fullText.Substring(startIndex)){
+                if(foundSequence){
+                    if(c == ' ' || c == ')' || c == '\n' || c == '\r') break; //we've found the end of the sequence
+                }
+                else{
+                    if(c != ' ' && c != ')' && c != '\n' && c != '\r'){
+                        //begin counting sequence
+                        foundSequence = true;
+                    }
+                }
+                endIndex++;   
+            }
+            string truePropertyValue = _text.Substring(startIndex,endIndex - startIndex);
+            result.Add((truePropertyValue.Trim(), match.Value[1..], match.Index + truePropertyValue.Trim().Length));
         }
         return result;
     }
