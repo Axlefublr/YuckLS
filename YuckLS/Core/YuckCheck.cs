@@ -8,22 +8,37 @@ using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 internal sealed class YuckCheck(string _text, Microsoft.Extensions.Logging.ILogger<CompletionHandler> _logger, IEwwWorkspace _workspace)
 {
     private readonly SExpression _sExpression = new(_text, _logger, _workspace);
-    private List<Diagnostic> _diagnostics = new();
-    public List<Diagnostic> TryGetDiagnostics()
+    //thread safe collection
+    private System.Collections.Concurrent.ConcurrentBag<Diagnostic> _diagnostics = new();
+    public async Task<List<Diagnostic>> TryGetDiagnostics(CancellationToken ctx)
     {
-        //bunch of these methods do the same thing over and over. I should find a way to combine them into one method eventually
-        GetBracketPairsErrors();
-        GetUnkownTypeErrors();
-        GetInvalidTopLevelDefinitionErrors();
-        GetInvalidPropertyDefinition();
-        GetInvalidPropertyValuesErrors();
-        return _diagnostics;
+        List<Task> diagnosticTasks = new(){
+            Task.Run(() => {
+                 GetBracketPairsErrors(ctx);
+            }),
+            Task.Run(()=>{
+                GetUnkownTypeErrors(ctx);
+            }),
+            Task.Run(()=>{
+                GetInvalidTopLevelDefinitionErrors(ctx);
+            }),
+            Task.Run(()=>{
+                GetInvalidPropertyDefinition(ctx);
+            }),
+            Task.Run(()=>{
+                GetInvalidPropertyValuesErrors(ctx);
+            })
+        };
+        await Task.WhenAll(diagnosticTasks);
+        return _diagnostics.ToList();
     }
-    private void GetBracketPairsErrors()
+    private void GetBracketPairsErrors(CancellationToken ctx)
     {
+        if (ctx.IsCancellationRequested) return;
         var unclosedBrackets = _sExpression.CheckBracketPairs();
         foreach (int pos in unclosedBrackets)
         {
+            if (ctx.IsCancellationRequested) return;
             _diagnostics.Add(new()
             {
                 Range = new Range(convertIndexToPosition(pos), convertIndexToPosition(pos + 1)),
@@ -34,11 +49,13 @@ internal sealed class YuckCheck(string _text, Microsoft.Extensions.Logging.ILogg
         }
     }
 
-    private void GetUnkownTypeErrors()
+    private void GetUnkownTypeErrors(CancellationToken ctx)
     {
+        if (ctx.IsCancellationRequested) return;
         var nodes = _sExpression.GetAllNodes();
         foreach (var node in nodes)
         {
+            if (ctx.IsCancellationRequested) return;
             var typeCollection = YuckTypesProvider.YuckTypes.Concat(_workspace.UserDefinedTypes).ToArray();
             //check if this node exists in the collection
             if (typeCollection.Where(p => p.name == node.nodeName).Count() != 0) continue;
@@ -52,12 +69,14 @@ internal sealed class YuckCheck(string _text, Microsoft.Extensions.Logging.ILogg
         }
     }
     //will probably fuse this into a generic function that just looks for definitions in the wrong place in general
-    private void GetInvalidTopLevelDefinitionErrors()
+    private void GetInvalidTopLevelDefinitionErrors(CancellationToken ctx)
     {
+        if (ctx.IsCancellationRequested) return;
         var nodes = _sExpression.GetAllNodes();
         //plan is to split the text at the index of each node and check is the first half would be able to declare a top level widget
         foreach (var node in nodes)
         {
+            if (ctx.IsCancellationRequested) return;
             var yuckType = YuckTypesProvider.YuckTypes.Concat(_workspace.UserDefinedTypes).Where(p => p.name == node.nodeName).FirstOrDefault();
             if (yuckType is null) continue;
             //split the string,
@@ -85,12 +104,14 @@ internal sealed class YuckCheck(string _text, Microsoft.Extensions.Logging.ILogg
             }
         }
     }
-    private void GetInvalidPropertyDefinition()
+    private void GetInvalidPropertyDefinition(CancellationToken ctx)
     {
+        if (ctx.IsCancellationRequested) return;
         var properties = _sExpression.GetAllProperyDefinitions();
         //split the text at the index of each property, get the parent type and check if that type has a defintion for this property
         foreach (var property in properties)
         {
+            if (ctx.IsCancellationRequested) return;
             var part1 = _sExpression.FullText.Substring(0, property.index);
             //create a new sexpression
             var sexpression = new SExpression(part1, _logger, _workspace);
@@ -113,11 +134,13 @@ internal sealed class YuckCheck(string _text, Microsoft.Extensions.Logging.ILogg
         }
     }
 
-    private void GetInvalidPropertyValuesErrors()
+    private void GetInvalidPropertyValuesErrors(CancellationToken ctx)
     {
+        if (ctx.IsCancellationRequested) return;
         var propertyValues = _sExpression.GetAllPropertyValues();
         foreach (var propertyValue in propertyValues)
         {
+            if (ctx.IsCancellationRequested) return;
             //GET PARENT NODE AND PROPERTY
             var part1 = _sExpression.FullText.Substring(0, propertyValue.index);
             //create a new sexpression
@@ -181,7 +204,7 @@ internal sealed class YuckCheck(string _text, Microsoft.Extensions.Logging.ILogg
                 {
                     Range = diagnosticsRange,
                     Message = $"{parentProperty} expects type string here but string not given",
-                    Severity = DiagnosticSeverity.Error
+                    Severity = DiagnosticSeverity.Warning
                 });
             }
             else if (parentPropertyType.dataType == YuckDataType.YuckInt)
@@ -193,7 +216,7 @@ internal sealed class YuckCheck(string _text, Microsoft.Extensions.Logging.ILogg
                     {
                         Range = diagnosticsRange,
                         Message = $"{parentProperty} expects type int, but int not given",
-                        Severity = DiagnosticSeverity.Error
+                        Severity = DiagnosticSeverity.Warning
                     });
                 }
             }
@@ -206,11 +229,12 @@ internal sealed class YuckCheck(string _text, Microsoft.Extensions.Logging.ILogg
                     {
                         Range = diagnosticsRange,
                         Message = $"{parentProperty} expects type bool, but bool not given",
-                        Severity = DiagnosticSeverity.Error
+                        Severity = DiagnosticSeverity.Warning
                     });
                 }
             }
-            else if(parentPropertyType.dataType == YuckDataType.YuckFloat){
+            else if (parentPropertyType.dataType == YuckDataType.YuckFloat)
+            {
                 //try to parse as a float
                 if (!float.TryParse(propertyValue.propertyValue, out float placeholder))
                 {
@@ -218,14 +242,16 @@ internal sealed class YuckCheck(string _text, Microsoft.Extensions.Logging.ILogg
                     {
                         Range = diagnosticsRange,
                         Message = $"{parentProperty} expects type float, but float not given",
-                        Severity = DiagnosticSeverity.Error
+                        Severity = DiagnosticSeverity.Warning
                     });
                 }
             }
-            else if(parentPropertyType.dataType == YuckDataType.YuckDuration ){
+            else if (parentPropertyType.dataType == YuckDataType.YuckDuration)
+            {
                 //figure thi out later
             }
-            else{
+            else
+            {
                 //wildcard, do nothing for now
             }
         }

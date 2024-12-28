@@ -155,6 +155,7 @@ internal class SExpression
         //copy text to another variable
         string textCopy = text;
         bool hasEncounteredOpenQuote = false;
+        int literalCount = 0; //string in literals like ${"i am a literal"}
         char quote = default;
         int indexOfOpenQuote = 0;
         //temporary(hopefully) very bad very inefficient solution to a very simple problem
@@ -173,12 +174,22 @@ internal class SExpression
             }
             else
             {
+                //match string literal, this might crash if text[i+1] is out of range. Will fix that.
+                if(text[i] == '$' && text[i+1] == '{' && text[i-1] != '\\'){
+                    //start counting string literal
+                    literalCount ++;
+                }
+                if(text[i] == '}' && literalCount > 0){
+                    //we need to exit the current string literal by decrementing the literal count. This is stupid af because it will break if the closing curly bracket is escaped
+                    literalCount --;
+                }
                 //if the current char mathches the open quote 
                 if (text[i] == quote)
                 {
-                    //we need to check that the current quote is not escaped to start another quote 
-                    if (text[i - 1] == '\\') { continue; }
+                    //we need to check that the current quote is not escaped to start another quote and that we are not in a string literal
+                    if (text[i - 1] == '\\' || literalCount > 0) { continue; }
 
+                    
                     //if it is not escaped, then it is the end of the original quote. Delete the Substring from the textCopy 
                     // textCopy = textCopy.Remove(indexOfOpenQuote, (i - indexOfOpenQuote) + 1);
 
@@ -200,9 +211,10 @@ internal class SExpression
                     break;
 
                 }
+                
             }
         }
-        //temp
+        //temporary hack
         if (shouldRestartLoop) return RemoveAllQuotedChars(textCopy);
         return textCopy;
     }
@@ -217,7 +229,7 @@ internal class SExpression
             if (semicolonIndex >= 0)
             {
                 int lengthToMask = lines[i].Length - semicolonIndex;
-                lines[i] = lines[i].Substring(0, semicolonIndex) + new string('*', lengthToMask);
+                lines[i] = lines[i].Substring(0, semicolonIndex) + new string('#', lengthToMask);
 
                 //this was the original code which completely removed the substring
                 //  lines[i] = lines[i].Substring(0, semicolonIndex);
@@ -440,8 +452,11 @@ internal class SExpression
                 }
                 endIndex++;   
             }
-            string truePropertyValue = _text.Substring(startIndex,endIndex - startIndex);
-            result.Add((truePropertyValue.Trim(), match.Value[1..], match.Index + truePropertyValue.Trim().Length));
+            string truePropertyValue = _text.Substring(startIndex,endIndex - startIndex).Trim();
+            if(truePropertyValue.Length > 0){
+                truePropertyValue = truePropertyValue.Split("#")[0];
+            }
+            result.Add((truePropertyValue, match.Value[1..], match.Index + truePropertyValue.Length));
         }
         return result;
     }

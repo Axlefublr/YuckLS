@@ -13,6 +13,7 @@ internal sealed class TextDocumentSyncHandler(
         ILoggerFactory _loggerFactory
         ) : TextDocumentSyncHandlerBase
 {
+    private CancellationTokenSource _diagnosticsDebounceToken = new();
     public override TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri)
     {
         return new TextDocumentAttributes(uri, uri.Scheme!, "yuck");
@@ -24,7 +25,7 @@ internal sealed class TextDocumentSyncHandler(
         var conf = await _configuration.GetScopedConfiguration(request.TextDocument.Uri, cancellationToken);
         _bufferService.Add(request.TextDocument.Uri, request.TextDocument.Text);
         //load diagnostics on document open
-        LoadDiagnostics(request.TextDocument.Uri);
+        _ = LoadDiagnostics(request.TextDocument.Uri);
         return Unit.Value;
     }
 
@@ -41,23 +42,34 @@ internal sealed class TextDocumentSyncHandler(
                 _bufferService.ApplyFullChange(request.TextDocument.Uri, change.Text);
             }
         }
-        LoadDiagnostics(request.TextDocument.Uri);
+        _ = LoadDiagnostics(request.TextDocument.Uri);
         return Task.FromResult(Unit.Value);
     }
-    private void LoadDiagnostics(DocumentUri documentUri)
+    private async Task LoadDiagnostics(DocumentUri documentUri)
     {
+        //cancel previous requests
+        _diagnosticsDebounceToken.Cancel();
+        _diagnosticsDebounceToken = new();
+
+        try
+        {
+            await Task.Delay(300, _diagnosticsDebounceToken.Token);
+        }
+        catch
+        {
+            return;
+        }
         string? _text = _bufferService.GetText(documentUri);
         if (_text != null)
         {
-            //some form of throttling should be implemented here
             var completionHandlerLogger = _loggerFactory.CreateLogger<CompletionHandler>();
             YuckCheck yuckCheck = new(_text, completionHandlerLogger, _ewwWorkspace);
-            var diagnostics = yuckCheck.TryGetDiagnostics();
+            var diagnostics = yuckCheck.TryGetDiagnostics(_diagnosticsDebounceToken.Token);
             var _languageServer = _serviceProvider.GetRequiredService<ILanguageServer>();
             _languageServer.PublishDiagnostics(new PublishDiagnosticsParams
             {
                 Uri = documentUri,
-                Diagnostics = diagnostics
+                Diagnostics = await diagnostics
             });
         }
     }

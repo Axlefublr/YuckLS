@@ -124,7 +124,8 @@ public class SExpressionTest
             :gddgdg
             (box )
             )
-            ("
+            (",
+        //8
         };
 
     //check bracket pairs test cases
