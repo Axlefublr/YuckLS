@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using YuckLS.Services;
 [assembly: InternalsVisibleTo("YuckLS.Test")]
 namespace YuckLS.Core;
+//very raw string parsing. Eventually when i get the time to learn how, ill use modern approaches like tokenization
 internal class SExpression
 {
     private readonly string _text;
@@ -157,16 +158,24 @@ internal class SExpression
         bool hasEncounteredOpenQuote = false;
         int literalCount = 0; //string in literals like ${"i am a literal"}
         char quote = default;
+        bool inCommentBlock = false; //whether we are in a comment block, since we are removing quotes before comments, we need to ignore any quotes in comments so that they will be removed later by the removecomments method
         int indexOfOpenQuote = 0;
-        //temporary(hopefully) very bad very inefficient solution to a very simple problem
-        bool shouldRestartLoop = false;
         for (int i = 0; i < textCopy.Length; i++)
         {
             //if we havent found a quote opener, skip to next char 
             if (!hasEncounteredOpenQuote)
             {
+                if (text[i] == ';')
+                {
+                    inCommentBlock = true; //we are in a comment block since we've encountered ';' without being in a quote
+                }
+                if (text[i] == '\n' || text[i] == '\r')
+                {
+                    inCommentBlock = false;
+                }
                 if (text[i] == '\"' || text[i] == '\'' || text[i] == '`')
                 {
+                  if(inCommentBlock) continue; //ignore everything to the end of the line
                     hasEncounteredOpenQuote = true;
                     quote = text[i];
                     indexOfOpenQuote = i;
@@ -175,13 +184,15 @@ internal class SExpression
             else
             {
                 //match string literal, this might crash if text[i+1] is out of range. Will fix that.
-                if(text[i] == '$' && text[i+1] == '{' && text[i-1] != '\\'){
+                if (text[i] == '$' && text[i + 1] == '{' && text[i - 1] != '\\')
+                {
                     //start counting string literal
-                    literalCount ++;
+                    literalCount++;
                 }
-                if(text[i] == '}' && literalCount > 0){
+                if (text[i] == '}' && literalCount > 0)
+                {
                     //we need to exit the current string literal by decrementing the literal count. This is stupid af because it will break if the closing curly bracket is escaped
-                    literalCount --;
+                    literalCount--;
                 }
                 //if the current char mathches the open quote 
                 if (text[i] == quote)
@@ -189,33 +200,17 @@ internal class SExpression
                     //we need to check that the current quote is not escaped to start another quote and that we are not in a string literal
                     if (text[i - 1] == '\\' || literalCount > 0) { continue; }
 
-                    
-                    //if it is not escaped, then it is the end of the original quote. Delete the Substring from the textCopy 
-                    // textCopy = textCopy.Remove(indexOfOpenQuote, (i - indexOfOpenQuote) + 1);
-
-                    //reset variables 
-                    //i cant figure out how to fix the indexing after deleting parts of the string. Feel so stupid rn. 
-                    /*hasEncounteredOpenQuote = false;*/
-                    /*quote = default;*/
-                    /*indexOfOpenQuote = 0;*/
-                    /**/
-                    /*i = indexOfOpenQuote -1;*/
-                    //restart loop 
-
-                    //the original code above completely removed the substrings. refactored it to replace it with a substitute instead becasue i might need to preserve the original indices. I can probably remove that terribly inefficient recursion now but i'll do that later.
                     int lengthToReplace = (i - indexOfOpenQuote) + 1;
                     string maskedSubstring = new string('*', lengthToReplace);
                     textCopy = textCopy.Remove(indexOfOpenQuote, lengthToReplace)
                                        .Insert(indexOfOpenQuote, maskedSubstring);
-                    shouldRestartLoop = true;
-                    break;
-
+                    hasEncounteredOpenQuote = false;
+                    quote = default;
+                    indexOfOpenQuote = 0;
                 }
-                
+
             }
         }
-        //temporary hack
-        if (shouldRestartLoop) return RemoveAllQuotedChars(textCopy);
         return textCopy;
     }
     //this used to completely remove the substring, changed it to substitute it with something else because we might need to retain the original indices
@@ -440,20 +435,25 @@ internal class SExpression
             int startIndex = match.Value.Length + match.Index;
             int endIndex = startIndex; //start counting initially from the start index
             bool foundSequence = false;
-            foreach(char c in _fullText.Substring(startIndex)){
-                if(foundSequence){
-                    if(c == ' ' || c == ')' || c == '\n' || c == '\r') break; //we've found the end of the sequence
+            foreach (char c in _fullText.Substring(startIndex))
+            {
+                if (foundSequence)
+                {
+                    if (c == ' ' || c == ')' || c == '\n' || c == '\r') break; //we've found the end of the sequence
                 }
-                else{
-                    if(c != ' ' && c != ')' && c != '\n' && c != '\r'){
+                else
+                {
+                    if (c != ' ' && c != ')' && c != '\n' && c != '\r')
+                    {
                         //begin counting sequence
                         foundSequence = true;
                     }
                 }
-                endIndex++;   
+                endIndex++;
             }
-            string truePropertyValue = _text.Substring(startIndex,endIndex - startIndex).Trim();
-            if(truePropertyValue.Length > 0){
+            string truePropertyValue = _text.Substring(startIndex, endIndex - startIndex).Trim();
+            if (truePropertyValue.Length > 0)
+            {
                 truePropertyValue = truePropertyValue.Split("#")[0];
             }
             result.Add((truePropertyValue, match.Value[1..], match.Index + truePropertyValue.Length));

@@ -303,7 +303,7 @@ public static class YuckTypesProvider
           new() {
             name = "initial",
               description = "Initial value while the listener loads",
-              dataType = YuckDataType.YuckString,
+              dataType = YuckDataType.Custom,
           }
         }
     },

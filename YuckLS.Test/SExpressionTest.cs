@@ -55,7 +55,11 @@ public class SExpressionTest
          //9
          @"(defwindow )
             (defpoll hyprvr :interval ""Hyprland --version|awk '{print $1; exit}'"")
-            ("
+            (",
+        //10
+        @"(
+            ;dgdgdg'(
+            )("
     };
 
     /*Test cases fot GetParentNode()
@@ -126,6 +130,11 @@ public class SExpressionTest
             )
             (",
         //8
+         @"(
+            (defwindow
+                ;comment it's
+                (box :class ""(node ""
+                    ("
         };
 
     //check bracket pairs test cases
@@ -161,6 +170,7 @@ public class SExpressionTest
         var test7 = new SExpression(_isTopLevelTestCases[6], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).IsTopLevel();
         var test8 = new SExpression(_isTopLevelTestCases[7], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).IsTopLevel();
         var test9 = new SExpression(_isTopLevelTestCases[8], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).IsTopLevel();
+        var test10 = new SExpression(_isTopLevelTestCases[9], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).IsTopLevel();
         Assert.False(test1);
         Assert.True(test2);
         Assert.False(test3);
@@ -170,6 +180,7 @@ public class SExpressionTest
         Assert.False(test7);
         Assert.True(test8);
         Assert.True(test9);
+        Assert.True(test10);
     }
 
     [Fact]
@@ -185,6 +196,7 @@ public class SExpressionTest
         var test5 = new SExpression(_getParentNodeTestCases[4], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).GetParentNode();
         var test6 = new SExpression(_getParentNodeTestCases[5], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).GetParentNode();
         var test7 = new SExpression(_getParentNodeTestCases[6], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).GetParentNode();
+        var test8 = new SExpression(_getParentNodeTestCases[7], CompletionHandlerLoggerMock.Object, ewwWorkspaceMock.Object).GetParentNode();
         Assert.Equal(test1, "box");
         Assert.Equal(test2, "defvar");
         Assert.Equal(test3, "defwidget");
@@ -192,6 +204,7 @@ public class SExpressionTest
         Assert.Equal(test5, "defpoll");
         Assert.Equal(test6, "defwindow");
         Assert.Equal(test7, "box");
+        Assert.Equal(test8, "box");
     }
 
     [Fact]
