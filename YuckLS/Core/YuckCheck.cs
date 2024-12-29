@@ -10,7 +10,7 @@ internal sealed class YuckCheck(string _text, Microsoft.Extensions.Logging.ILogg
     private readonly SExpression _sExpression = new(_text, _logger, _workspace);
     //thread safe collection
     private System.Collections.Concurrent.ConcurrentBag<Diagnostic> _diagnostics = new();
-    public async Task<List<Diagnostic>> TryGetDiagnostics(CancellationToken ctx)
+    public async Task<List<Diagnostic>> TryGetDiagnosticsAsync(CancellationToken ctx)
     {
         List<Task> diagnosticTasks = new(){
             Task.Run(() => {

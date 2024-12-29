@@ -25,7 +25,7 @@ internal sealed class TextDocumentSyncHandler(
         var conf = await _configuration.GetScopedConfiguration(request.TextDocument.Uri, cancellationToken);
         _bufferService.Add(request.TextDocument.Uri, request.TextDocument.Text);
         //load diagnostics on document open
-        _ = LoadDiagnostics(request.TextDocument.Uri);
+        _ = LoadDiagnosticsAsync(request.TextDocument.Uri);
         return Unit.Value;
     }
 
@@ -42,13 +42,13 @@ internal sealed class TextDocumentSyncHandler(
                 _bufferService.ApplyFullChange(request.TextDocument.Uri, change.Text);
             }
         }
-        _ = LoadDiagnostics(request.TextDocument.Uri);
+        _ = LoadDiagnosticsAsync(request.TextDocument.Uri);
         return Task.FromResult(Unit.Value);
     }
-    private async Task LoadDiagnostics(DocumentUri documentUri)
+    private async Task LoadDiagnosticsAsync(DocumentUri documentUri)
     {
         //cancel previous requests
-        _diagnosticsDebounceToken.Cancel();
+        await _diagnosticsDebounceToken.CancelAsync();
         _diagnosticsDebounceToken = new();
 
         try
@@ -64,7 +64,7 @@ internal sealed class TextDocumentSyncHandler(
         {
             var completionHandlerLogger = _loggerFactory.CreateLogger<CompletionHandler>();
             YuckCheck yuckCheck = new(_text, completionHandlerLogger, _ewwWorkspace);
-            var diagnostics = yuckCheck.TryGetDiagnostics(_diagnosticsDebounceToken.Token);
+            var diagnostics = yuckCheck.TryGetDiagnosticsAsync(_diagnosticsDebounceToken.Token);
             var _languageServer = _serviceProvider.GetRequiredService<ILanguageServer>();
             _languageServer.PublishDiagnostics(new PublishDiagnosticsParams
             {
