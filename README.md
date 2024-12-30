@@ -49,14 +49,6 @@ injection-regex="yuck"
 file-types=["yuck"]
 language-servers = ["yuckls"]
 ```
-## Custom widget autocompletion
-For completions for custom widgets defined with (defwidget , your workspace must contain an eww.yuck file somewhere up the directory tree. The lsp will assume this file is the entry point for EWW. In this file, widgets defined will be available for completion. Yuck Source files that have been included into eww.yuck will loaded recursilvely for completion as well, this means imported yuck files and even yuck files imported into imported files will be parsed. Includes must be kept relative to your eww.yuck file. Basically just set it up according to EWW's docs and it should work.
-
-
-https://github.com/user-attachments/assets/a587fae7-3c4c-49c3-bb83-88ed9af4f902
-
-
-
 
 ## ROADMAP
 ✔️ Basic in built type completions for widgets and properties
@@ -71,5 +63,6 @@ https://github.com/user-attachments/assets/a587fae7-3c4c-49c3-bb83-88ed9af4f902
 
 
 
-https://github.com/user-attachments/assets/4beb085d-ae2d-4b65-acbd-17479d31cb03
+![Screenshot_29-Dec_19-11-31_29472](https://github.com/user-attachments/assets/e4cb5a39-8692-42f6-8906-f9afe8201f30)
+
 
