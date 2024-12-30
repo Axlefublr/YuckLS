@@ -394,8 +394,9 @@ internal class SExpression
     ///</summary>
     internal protected List<(string nodeName, int index)> GetAllNodes()
     {
+    //fix thid
         List<(string node, int index)> result = new();
-        string patternForNodes = @"\(\w+[^ )]*";
+        string patternForNodes = @"\(\w+[^ )|^\r\n]*";
         var matches = Regex.Matches(_fullText, patternForNodes).ToArray();
         foreach (var match in matches)
         {
