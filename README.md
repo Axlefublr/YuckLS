@@ -61,6 +61,9 @@ language-servers = ["yuckls"]
 
 ❌ Buffer formatting  
 
+# Limitations
+For some reason i already regret, i decided to write the parser with just regex and string parsing instead of more standard methods like using lexers or ASTs. It's quirky but should work fine for many simple cases. Perhaps in the future or until a better solution is available, i might rewrite the whole thing to use ANTLR or something more flexible and concise.
+
 
 
 ![Screenshot_29-Dec_19-11-31_29472](https://github.com/user-attachments/assets/e4cb5a39-8692-42f6-8906-f9afe8201f30)
