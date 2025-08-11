@@ -17,7 +17,7 @@ yay -S yuckls-git
 The executable can be started by running ```yuckls```
 
 # Neovim
-```
+```lua
 -- put this in your init.lua
 vim.api.nvim_create_autocmd(
     {"BufEnter", "BufWinEnter"},
@@ -37,7 +37,7 @@ vim.api.nvim_create_autocmd(
 ```
 
 # Helix
-```
+```toml
 # put this in your languages.toml
 [language-server]
 yuckls = {command="dotnet" , args = ["/home/gitrepos/yuckls/YuckLS/dist/YuckLS.dll"]} #must be where you cloned this repo to
